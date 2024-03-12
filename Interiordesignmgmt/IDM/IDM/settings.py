@@ -95,6 +95,7 @@ SIMPLE_JWT = {
 }
 
 MIDDLEWARE = [
+
     "corsheaders.middleware.CorsMiddleware",
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -107,7 +108,10 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'IDM.urls'
 
-CORS_ALLOW_ALL_ORIGINS: True
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:3000",
+    "http://127.0.0.1:8000",
+]
 
 TEMPLATES = [
     {

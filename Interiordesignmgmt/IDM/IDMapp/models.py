@@ -58,7 +58,7 @@ class Home(models.Model):
         ('bedroom', 'Bed Room'),
         ('bathroom', 'Bath Room'),
         ('diningroom', 'Dining Room'),
-        ('bathroom', 'Bathroom'),
+        ('visitingroom', 'Visitingroom'),
         ('kids room', 'Kids Room')
     ]
      Name = models.CharField(max_length=100,unique=True)
