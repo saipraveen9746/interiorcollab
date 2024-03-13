@@ -2,13 +2,14 @@ from rest_framework import serializers
 from django.contrib.auth.models import User
 
 
-from .models import office,Home,Product,CartItem,Cart,Order,CustomUser,AgentProduct
+from .models import office,Home,Product,CartItem,Cart,Order,CustomUser,AgentProduct,OfficeBookDesign
 from IDMapp import models
+
 
 class UserRegistrationSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomUser
-        fields = ['username', 'password', 'email' , 'user_type']  
+        fields = ['username', 'password', 'email', 'user_type']  
         extra_kwargs = {'password': {'write_only': True}}
 
     def create(self, validated_data):
@@ -16,14 +17,19 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
             username=validated_data['username'],
             email=validated_data['email'],
             password=validated_data['password'],
-            user_type = validated_data['user_type']
-        
+            user_type=validated_data['user_type']
         )
         return user
+
+class UserLoginSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    password = serializers.CharField(style={'input_type': 'password'})
+
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomUser
-        fields = ['id', 'username', 'email']
+        fields = ['id', 'username', 'email', 'user_type']
+
 
 class OfficeSerializer(serializers.ModelSerializer):
     class Meta:
@@ -69,7 +75,7 @@ class CartItemSerializer(serializers.ModelSerializer):
     productname = serializers.CharField(source='product.Name', read_only=True)
     class Meta:
         model = models.CartItem
-        fields = ['id', 'cart', 'productname', 'quantity']
+        fields = [ 'cart', 'productname', 'quantity']
 
 
 
@@ -99,7 +105,7 @@ class AgentProductSerializer(serializers.ModelSerializer):
 
 
 from rest_framework import serializers
-from .models import Order,BookDesign
+from .models import Order
 
 class OrderSerializer(serializers.ModelSerializer):
     class Meta:
@@ -111,14 +117,18 @@ class OrderSerializer(serializers.ModelSerializer):
         validated_data['user'] = user
         return super().create(validated_data)
     
-class BookdesignSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = BookDesign
-        fields = ['agentproduct' ,'user']
+
 
 class HomeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Home
         fields = '__all__'
 
-        
+
+
+class OfficeBookDesignSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = OfficeBookDesign
+        fields = ['name', 'email', 'contact_no', 'address']
+
+

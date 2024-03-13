@@ -13,20 +13,55 @@ from rest_framework.permissions import IsAuthenticated
 from .main import RazorpayClient
 from rest_framework import viewsets
 from .permissions import AgentPermissions
-
+from rest_framework.decorators import action
 from IDMapp import models
 
 from IDMapp import serializers
+from rest_framework import generics, permissions, status
+from rest_framework.response import Response
+from rest_framework import status
+from rest_framework.response import Response
+from rest_framework.authtoken.models import Token
+from rest_framework.views import APIView
+from django.contrib.auth import authenticate, login
+from .serializers import UserLoginSerializer, UserSerializer
+from .models import CustomUser
+
+
 
 class UserRegistrationView(generics.CreateAPIView):
+    queryset = CustomUser.objects.all()
     serializer_class = UserRegistrationSerializer
+    permission_classes = [permissions.AllowAny]
+
+class UserLoginView(APIView):
+    serializer_class = UserLoginSerializer
 
     def post(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
+        serializer = self.serializer_class(data=request.data)
         serializer.is_valid(raise_exception=True)
-        self.perform_create(serializer)
-        headers = self.get_success_headers(serializer.data)
-        return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
+        user = authenticate(
+            request,
+            email=serializer.validated_data['email'],
+            password=serializer.validated_data['password']
+        )
+
+        if user:
+            login(request, user)
+            token, created = Token.objects.get_or_create(user=user)
+            return Response({'token': token.key, 'user': UserSerializer(user).data})
+        else:
+            return Response({'error': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
+
+class UserDetailsView(generics.RetrieveUpdateAPIView):
+    queryset = CustomUser.objects.all()
+    serializer_class = UserSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_object(self):
+        return self.request.user
+
 
 class OfficeListView(generics.ListAPIView):
     queryset = office.objects.all()
@@ -124,11 +159,6 @@ class CompanyProductListView(generics.ListAPIView):
 
 class AgentProductCreateView(generics.CreateAPIView):
     queryset = AgentProduct.objects.all()
-
-
-
-
-    
     serializer_class = AgentProductSerializer
     permission_classes = [AgentPermissions]
 
@@ -192,33 +222,33 @@ class PlaceOrderView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 # views.py
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import status
-from rest_framework.permissions import IsAuthenticated
-from .models import BookDesign, AgentProduct
-from .serializers import BookdesignSerializer
+# from rest_framework.views import APIView
+# from rest_framework.response import Response
+# from rest_framework import status
+# from rest_framework.permissions import IsAuthenticated
+# from .models import BookDesign, AgentProduct
+# from .serializers import BookdesignSerializer
 
-class Bookdesign(APIView):
-    permission_classes = [IsAuthenticated]
+# class Bookdesign(APIView):
+#     permission_classes = [IsAuthenticated]
 
-    def post(self, request, **kwargs):
-        product_id = kwargs.get('product_id')
+#     def post(self, request, **kwargs):
+#         product_id = kwargs.get('product_id')
 
-        try:
-            # Query the AgentProduct based on the provided product_id
-            agent_product = AgentProduct.objects.get(id=product_id)
-        except AgentProduct.DoesNotExist:
-            return Response({'error': 'AgentProduct not found'}, status=status.HTTP_404_NOT_FOUND)
+#         try:
+#             # Query the AgentProduct based on the provided product_id
+#             agent_product = AgentProduct.objects.get(id=product_id)
+#         except AgentProduct.DoesNotExist:
+#             return Response({'error': 'AgentProduct not found'}, status=status.HTTP_404_NOT_FOUND)
 
-        # Create the BookDesign instance
-        book_data = {'agentproduct': agent_product.id}
-        serializer = BookdesignSerializer(data=book_data, context={'request': request})
-        if serializer.is_valid():
-            serializer.save(user=request.user)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
+#         # Create the BookDesign instance
+#         book_data = {'agentproduct': agent_product.id}
+#         serializer = BookdesignSerializer(data=book_data, context={'request': request})
+#         if serializer.is_valid():
+#             serializer.save(user=request.user)
+#             return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+#         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class CategoryHomesAPIView(generics.ListAPIView):
@@ -236,4 +266,32 @@ class CategoryOfficeApiView(generics.ListAPIView):
         category = self.kwargs['category']
         return office.objects.filter(Category=category)
     
+
+from rest_framework.authentication import TokenAuthentication
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from .models import office, OfficeBookDesign
+from .serializers import OfficeBookDesignSerializer
+from django.shortcuts import get_object_or_404
+
+class BookOfficeView(APIView):
+    permission_classes = [IsAuthenticated]
+    def post(self, request, office_id):
+        user = request.user
+        print(user)
+        if user.user_type != 'Customer' :
+            return Response({'error': 'Only customers can make bookings'}, status=status.HTTP_403_FORBIDDEN)
+
+        office_instance = get_object_or_404(office, pk=office_id)
+        serializer = OfficeBookDesignSerializer(data=request.data)
+
+        if serializer.is_valid():
+            serializer.save(user=user, product=office_instance)
+            return Response({'status': 'Booking successful'}, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+
 
