@@ -6,13 +6,16 @@ from rest_framework import generics
 from rest_framework.response import Response
 from rest_framework import status
 from .serializers import  UserRegistrationSerializer,OfficeSerializer
-from .models import Order, office,Home,Product,Cart,CartItem,AgentProduct
+from .models import Order, office,Home,Product,Cart,CartItem,AgentProduct,CustomUser
 from .serializers import ProductListserializer,ProductDetailserializer,CartSerializer,CompanyNameSerializer,AgentProductSerializer,HomeSerializer
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 from .main import RazorpayClient
 from rest_framework import viewsets
 from .permissions import AgentPermissions
+from django.contrib.auth import authenticate
+from rest_framework_simplejwt .tokens import RefreshToken
+
 
 from IDMapp import models
 
@@ -237,3 +240,30 @@ class CategoryOfficeApiView(generics.ListAPIView):
         return office.objects.filter(Category=category)
     
 
+class LoginView(generics.GenericAPIView):
+    serializer_class = serializers.LoginSerializer
+
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        username = serializer.validated_data.get('username')
+        password = serializer.validated_data.get('password')
+
+        user = authenticate(request, username=username, password=password)
+
+        if user:
+            refresh = RefreshToken.for_user(user)
+            return Response({
+                'refresh': str(refresh),
+                'access': str(refresh.access_token),
+                'username': user.username,
+                'email': user.email,
+                'user_type' : user.user_type
+                
+
+
+    
+            })
+        else:
+            return Response({'error': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)

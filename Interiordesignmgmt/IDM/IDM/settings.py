@@ -40,7 +40,6 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'IDMapp',
     'rest_framework',
-    'rest_framework.authtoken',
     'rest_framework_simplejwt',
     'chat',
     "corsheaders"
