@@ -14,9 +14,10 @@ from rest_framework.routers import DefaultRouter
 
 urlpatterns = [
     
+    
     path('register/', UserRegistrationView.as_view(), name='user-register'),
-    path('login/', UserLoginView.as_view(), name='user-login'),
-    path('user/', UserDetailsView.as_view(), name='user-details'),
+    # path('login/', UserLoginView.as_view(), name='user-login'),
+    # path('user/', UserDetailsView.as_view(), name='user-details'),
     path('office-list/',OfficeListView.as_view(),name='office_list'),
     path('productlist/',ProductListView.as_view(),name='product_list'),
     path('products/<int:id>/',ProductDetailView.as_view(),name='products'),

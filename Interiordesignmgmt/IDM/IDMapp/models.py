@@ -1,36 +1,19 @@
 from django.db import models
 from django.contrib.auth.models import User
 from decimal import Decimal
-from django.contrib.auth.models import AbstractUser, BaseUserManager
+from django.contrib.auth.models import AbstractUser
 from .managers import CustomUserManager
 from django.conf import settings
-from django.utils.translation import gettext_lazy as _
 
-
-class CustomUserManager(BaseUserManager):
-    def create_user(self, email, password=None, **extra_fields):
-        if not email:
-            raise ValueError(_('The Email field must be set'))
-        email = self.normalize_email(email)
-        user = self.model(email=email, **extra_fields)
-        user.set_password(password)
-        user.save(using=self._db)
-        return user
-
-    def create_superuser(self, email, password=None, **extra_fields):
-        extra_fields.setdefault('is_staff', True)
-        extra_fields.setdefault('is_superuser', True)
-
-        return self.create_user(email, password, **extra_fields)
 
 class CustomUser(AbstractUser):
     USER_TYPE_CHOICES = [
         ('Customer', 'customer'),
         ('Agent', 'agent'),
+        
     ]
 
-    email = models.EmailField(unique=True)
-    user_type = models.CharField(max_length=20, choices=USER_TYPE_CHOICES, default='customer', null=True)
+    user_type = models.CharField(max_length=20, choices=USER_TYPE_CHOICES,default='customer',null=True)
     groups = models.ManyToManyField(
         'auth.Group',
         related_name='customuser_set',
@@ -47,14 +30,10 @@ class CustomUser(AbstractUser):
         verbose_name='user permissions',
         help_text='Specific permissions for this user.',
     )
+    
+    
 
     objects = CustomUserManager()
-
-    USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = []
-
-    def __str__(self):
-        return self.email
 
 
 
@@ -207,18 +186,15 @@ class Order(models.Model):
 
 
 
-class OfficeBookDesign(models.Model):
+class BookDesign(models.Model):
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE,limit_choices_to={'user_type': 'Customer'},null=True )
-    product = models.ForeignKey(office, on_delete=models.CASCADE)
+    agentproduct = models.ForeignKey(AgentProduct, on_delete=models.CASCADE)
     name = models.CharField(max_length=200,null=True)
     email = models.TextField(max_length=10000,null = True)
     contact_no = models.IntegerField(null=True)
-    address = models.TextField(null=True)
 
     
 
 
 
-
-
-
+    
