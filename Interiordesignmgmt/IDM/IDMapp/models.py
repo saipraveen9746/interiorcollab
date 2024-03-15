@@ -176,8 +176,7 @@ class NeededProducts(models.Model):
 
 
 
-from django.db import models
-from django.conf import settings
+
 
 class Order(models.Model):
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, limit_choices_to={'user_type': 'Customer'},null=True)
@@ -186,15 +185,29 @@ class Order(models.Model):
 
 
 
-class BookDesign(models.Model):
+class OFFiceBookDesign(models.Model):
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE,limit_choices_to={'user_type': 'Customer'},null=True )
-    agentproduct = models.ForeignKey(AgentProduct, on_delete=models.CASCADE)
+    product = models.ForeignKey(office, on_delete=models.CASCADE)
     name = models.CharField(max_length=200,null=True)
     email = models.TextField(max_length=10000,null = True)
-    contact_no = models.IntegerField(null=True)
+    contact_no = models.BigIntegerField(null=True)
+    address = models.TextField(null=True)
 
     
+class HomeBookDesign(models.Model):
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE,limit_choices_to={'user_type': 'Customer'},null=True )
+    product = models.ForeignKey(Home, on_delete=models.CASCADE)
+    name = models.CharField(max_length=200,null=True)
+    email = models.TextField(max_length=10000,null = True)
+    contact_no = models.BigIntegerField(null=True)
+    address = models.TextField(null=True)
 
 
-
+class AgentProductBooking(models.Model):
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE,limit_choices_to={'user_type': 'Customer'},null=True )
+    product = models.ForeignKey(AgentProduct, on_delete=models.CASCADE)
+    name = models.CharField(max_length=200,null=True)
+    email = models.TextField(max_length=10000,null = True)
+    contact_no = models.BigIntegerField(null=True)
+    address = models.TextField(null=True)
     

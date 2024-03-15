@@ -3,7 +3,7 @@ from django.contrib.auth.models import User
 from django.contrib.auth import authenticate
 
 
-from .models import office,Home,Product,CartItem,Cart,Order,CustomUser,AgentProduct
+from .models import office,Home,Product,CartItem,Cart,Order,CustomUser,AgentProduct,OFFiceBookDesign,HomeBookDesign,AgentProductBooking
 from IDMapp import models
 
 class UserRegistrationSerializer(serializers.ModelSerializer):
@@ -67,10 +67,10 @@ class CartSerializer(serializers.ModelSerializer):
 
 
 class CartItemSerializer(serializers.ModelSerializer):
-    productname = serializers.CharField(source='product.Name', read_only=True)
+    product = ProductSerializer(read_only=True)
     class Meta:
         model = models.CartItem
-        fields = ['id', 'cart', 'productname', 'quantity']
+        fields = ['id', 'cart', 'product','quantity']
 
 
 
@@ -100,7 +100,7 @@ class AgentProductSerializer(serializers.ModelSerializer):
 
 
 from rest_framework import serializers
-from .models import Order,BookDesign
+from .models import Order
 
 class OrderSerializer(serializers.ModelSerializer):
     class Meta:
@@ -112,10 +112,7 @@ class OrderSerializer(serializers.ModelSerializer):
         validated_data['user'] = user
         return super().create(validated_data)
     
-class BookdesignSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = BookDesign
-        fields = ['agentproduct' ,'user']
+
 
 class HomeSerializer(serializers.ModelSerializer):
     class Meta:
@@ -145,3 +142,61 @@ class LoginSerializer(serializers.Serializer):
         attrs['user'] = user
         return attrs
 
+class OfficeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = office
+        fields = '__all__'
+
+class OFFiceBookDesignSerializer(serializers.ModelSerializer):
+    product = OfficeSerializer(read_only=True)
+    class Meta:
+        model = OFFiceBookDesign
+        fields = ['name', 'email', 'contact_no', 'address','product']
+
+class HomeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Home
+        fields = '__all__'
+
+class HomeBookDesignSerializer(serializers.ModelSerializer):
+    product = HomeSerializer(read_only=True)
+    class Meta:
+        model = HomeBookDesign
+        fields = ['name', 'email', 'contact_no', 'address','product']
+
+class AgentbookSerializer(serializers.ModelSerializer):
+    product = AgentProductSerializer(read_only=True)
+    class Meta:
+        model = AgentProductBooking
+        fields = ['name', 'email', 'contact_no', 'address','product']
+
+class OfficeDetailserializer(serializers.ModelSerializer):
+    class Meta:
+        model = office
+        fields = '__all__'
+
+class HomeDetailserializer(serializers.ModelSerializer):
+    class Meta:
+        model = Home
+        fields = '__all__'
+
+
+
+
+
+class AgentUsernameSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CustomUser
+        fields = ['username']
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        if instance.user_type.lower() == 'agent':
+            return data
+        return None 
+    
+class AgentDetailserializer(serializers.ModelSerializer):
+    user = AgentUsernameSerializer(read_only=True)
+    class Meta:
+        model = AgentProduct
+        fields = '__all__'

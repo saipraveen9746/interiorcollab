@@ -6,15 +6,17 @@ from rest_framework import generics
 from rest_framework.response import Response
 from rest_framework import status
 from .serializers import  UserRegistrationSerializer,OfficeSerializer
-from .models import Order, office,Home,Product,Cart,CartItem,AgentProduct,CustomUser
-from .serializers import ProductListserializer,ProductDetailserializer,CartSerializer,CompanyNameSerializer,AgentProductSerializer,HomeSerializer
+from .models import Order, office,Home,Product,Cart,CartItem,AgentProduct,CustomUser,HomeBookDesign,AgentProductBooking
+from .serializers import ProductListserializer,ProductDetailserializer,CartSerializer,CompanyNameSerializer,AgentProductSerializer,HomeSerializer,AgentbookSerializer,OfficeDetailserializer,HomeDetailserializer,AgentDetailserializer
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 from .main import RazorpayClient
 from rest_framework import viewsets
-from .permissions import AgentPermissions
+from .permissions import AgentPermissions,IsCustomer
 from django.contrib.auth import authenticate
 from rest_framework_simplejwt .tokens import RefreshToken
+from rest_framework.decorators import api_view, permission_classes
+
 
 
 from IDMapp import models
@@ -43,26 +45,6 @@ class ProductDetailView(generics.RetrieveAPIView):
     queryset = Product.objects.all()
     serializer_class = ProductDetailserializer
     lookup_field = 'id'
-
-
-
-
-#     def post(self, request, product_id):
-#         cart, created = Cart.objects.get_or_create(user=request.user)
-
-#         try:
-#             product = Product.objects.get(id=product_id)
-#         except Product.DoesNotExist:
-#             return Response({'error': 'Product not found'}, status=status.HTTP_404_NOT_FOUND)
-
-#         quantity = request.data.get('quantity', 1)
-
-#         cart_item, created = CartItem.objects.get_or_create(cart=cart, product=product)
-#         cart_item.quantity += quantity
-#         cart_item.save()
-
-#         serializer = CartSerializer(cart)
-#         return Response(serializer.data)
     
 
 class AddToCart(generics.CreateAPIView):
@@ -127,11 +109,6 @@ class CompanyProductListView(generics.ListAPIView):
 
 class AgentProductCreateView(generics.CreateAPIView):
     queryset = AgentProduct.objects.all()
-
-
-
-
-    
     serializer_class = AgentProductSerializer
     permission_classes = [AgentPermissions]
 
@@ -194,34 +171,9 @@ class PlaceOrderView(APIView):
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-# views.py
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import status
-from rest_framework.permissions import IsAuthenticated
-from .models import BookDesign, AgentProduct
-from .serializers import BookdesignSerializer
 
-class Bookdesign(APIView):
-    permission_classes = [IsAuthenticated]
 
-    def post(self, request, **kwargs):
-        product_id = kwargs.get('product_id')
 
-        try:
-            # Query the AgentProduct based on the provided product_id
-            agent_product = AgentProduct.objects.get(id=product_id)
-        except AgentProduct.DoesNotExist:
-            return Response({'error': 'AgentProduct not found'}, status=status.HTTP_404_NOT_FOUND)
-
-        # Create the BookDesign instance
-        book_data = {'agentproduct': agent_product.id}
-        serializer = BookdesignSerializer(data=book_data, context={'request': request})
-        if serializer.is_valid():
-            serializer.save(user=request.user)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class CategoryHomesAPIView(generics.ListAPIView):
@@ -267,3 +219,128 @@ class LoginView(generics.GenericAPIView):
             })
         else:
             return Response({'error': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
+        
+
+# views.py
+from rest_framework import status
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.response import Response
+from .models import office, OFFiceBookDesign
+from .serializers import OFFiceBookDesignSerializer,HomeBookDesignSerializer
+from rest_framework.permissions import IsAuthenticated
+from django.shortcuts import get_object_or_404
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def book_office(request, office_id):
+    Office = get_object_or_404(office, pk=office_id)
+
+    if request.user.user_type != 'Customer':
+        return Response({'error': 'Only customers can book office products.'}, status=status.HTTP_403_FORBIDDEN)
+
+
+    if OFFiceBookDesign.objects.filter(user=request.user, product=Office).exists():
+        return Response({'error': 'You have already booked this office product.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    if request.method == 'POST':
+        serializer = OFFiceBookDesignSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save(user=request.user, product=Office)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def book_home(request, home_id):
+
+    home = get_object_or_404(Home, pk=home_id)
+
+
+    if request.user.user_type != 'Customer':
+        return Response({'error': 'Only customers can book home products.'}, status=status.HTTP_403_FORBIDDEN)
+
+
+    if HomeBookDesign.objects.filter(user=request.user, product=home).exists():
+        return Response({'error': 'You have already booked this office product.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    if request.method == 'POST':
+        serializer = HomeBookDesignSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save(user=request.user, product=home)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+
+
+
+
+
+class BookedHomeDetails(generics.ListAPIView):
+    serializer_class = serializers.HomeBookDesignSerializer
+    queryset = models.HomeBookDesign.objects.all()
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        user=self.request.user
+        query = models.HomeBookDesign.objects.filter(user_id=user)
+        return query
+    
+
+class BookedOfficeDetails(generics.ListAPIView):
+    serializer_class = serializers.OFFiceBookDesignSerializer
+    queryset = models.OFFiceBookDesign.objects.all()
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        user=self.request.user
+        query = models.OFFiceBookDesign.objects.filter(user_id=user)
+        return query
+    
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def book_agent_product(request, product_id):
+
+    agent = get_object_or_404(AgentProduct, pk=product_id)
+
+    if request.user.user_type != 'Customer':
+        return Response({'error': 'Only customers can book agent products.'}, status=status.HTTP_403_FORBIDDEN)
+
+    if AgentProductBooking.objects.filter(user=request.user, product=agent).exists():
+        return Response({'error': 'You have already booked this agent product.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    if request.method == 'POST':
+        serializer = AgentbookSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save(user=request.user, product=agent)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+
+class BookedAgentProductDetails(generics.ListAPIView):
+    serializer_class = serializers.AgentbookSerializer
+    queryset = models.AgentProductBooking.objects.all()
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        user=self.request.user
+        query = models.AgentProductBooking.objects.filter(user_id=user)
+        return query
+
+
+
+class OfficeDetailView(generics.RetrieveAPIView):
+    queryset = office.objects.all()
+    serializer_class = OfficeDetailserializer
+    lookup_field = 'id'
+    
+class HomeDetailView(generics.RetrieveAPIView):
+    queryset = Home.objects.all()
+    serializer_class = HomeDetailserializer
+    lookup_field = 'id'
+
+
+class AgentProductDetailView(generics.RetrieveAPIView):
+    queryset = AgentProduct.objects.all()
+    serializer_class = AgentDetailserializer
+    lookup_field = 'id'
