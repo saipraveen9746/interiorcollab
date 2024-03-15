@@ -1,13 +1,11 @@
 import time
 from django.shortcuts import get_object_or_404, render
-
-# Create your views here.
-from rest_framework import generics
 from rest_framework.response import Response
-from rest_framework import status
+from rest_framework import status,generics,permissions
 from .serializers import  UserRegistrationSerializer,OfficeSerializer
-from .models import Order, office,Home,Product,Cart,CartItem,AgentProduct,CustomUser,HomeBookDesign,AgentProductBooking
-from .serializers import ProductListserializer,ProductDetailserializer,CartSerializer,CompanyNameSerializer,AgentProductSerializer,HomeSerializer,AgentbookSerializer,OfficeDetailserializer,HomeDetailserializer,AgentDetailserializer
+from .models import Order, office,Home,Product,Cart,CartItem,AgentProduct,CustomUser,HomeBookDesign,AgentProductBooking,WishList
+from .serializers import ProductListserializer,ProductDetailserializer,CartSerializer,CompanyNameSerializer,AgentProductSerializer,HomeSerializer,AgentbookSerializer,OfficeDetailserializer,HomeDetailserializer,AgentDetailserializer,CartItemSerializer,WishListSerializer,OrderSerializer,OFFiceBookDesign
+from .serializers import OFFiceBookDesignSerializer,HomeBookDesignSerializer
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 from .main import RazorpayClient
@@ -16,16 +14,13 @@ from .permissions import AgentPermissions,IsCustomer
 from django.contrib.auth import authenticate
 from rest_framework_simplejwt .tokens import RefreshToken
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework import generics
-from .models import WishList
-from .serializers import WishListSerializer
-
-
-
-
 from IDMapp import models
-
 from IDMapp import serializers
+
+
+
+
+
 
 class UserRegistrationView(generics.CreateAPIView):
     serializer_class = UserRegistrationSerializer
@@ -59,8 +54,6 @@ class AddToCart(generics.CreateAPIView):
         product_id = self.kwargs.get('product_id')
         products = get_object_or_404(models.Product, pk=product_id)
         quantity = self.kwargs.get('quantity')
-        # print('------------------------------------')
-        # print(products)
         if quantity <= products.quantity:
             if not product_id:
                 return Response({'error': 'Product ID is required'}, status=status.HTTP_400_BAD_REQUEST)
@@ -80,6 +73,35 @@ class AddToCart(generics.CreateAPIView):
         else:
             return Response({'error':'That much product not available'}, status=status.HTTP_400_BAD_REQUEST)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
+    
+
+
+
+class RemoveFromCart(generics.DestroyAPIView):
+    queryset = CartItem.objects.all()
+    serializer_class = CartItemSerializer
+    permission_classes = [IsAuthenticated]
+
+    def delete(self, request, *args, **kwargs):
+        product_id = kwargs.get('pk')
+        if not product_id:
+            return Response({"error": "Product ID is required"}, status=status.HTTP_400_BAD_REQUEST)
+
+        user = request.user
+
+ 
+        cart_item = CartItem.objects.filter(cart__user=user, product_id=product_id).first()
+        if not cart_item:
+            return Response({"error": "Product is not in the cart"}, status=status.HTTP_400_BAD_REQUEST)
+
+
+        cart_item.delete()
+
+
+        cart_item.cart.update_total_price()
+
+        return Response({"success": "Product removed from cart"}, status=status.HTTP_204_NO_CONTENT)
+
     
 
 class CartItemsListview(generics.ListAPIView):
@@ -121,6 +143,19 @@ class AgentProductCreateView(generics.CreateAPIView):
 
 
 
+class DeleteAgentProduct(generics.DestroyAPIView):
+    queryset = AgentProduct.objects.all()
+    serializer_class = AgentProductSerializer
+    permission_classes = [IsAuthenticated]
+
+    def delete(self, request, *args, **kwargs):
+        instance = self.get_object()
+        self.perform_destroy(instance)
+        return Response({"success": "Agent product deleted successfully"}, status=status.HTTP_204_NO_CONTENT)
+
+
+
+
 
 from django.db.models.signals import post_save
 from django.dispatch import receiver
@@ -134,28 +169,17 @@ def update_product_quantity(sender, instance, created, **kwargs):
             product.quantity -= instance.quantity
             product.save()
 
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import status
-from .models import Order, Product
-from .serializers import OrderSerializer
 
-from django.shortcuts import get_object_or_404
-from rest_framework import status
-from rest_framework.response import Response
-from rest_framework.views import APIView
-from .models import Product
-from .serializers import OrderSerializer
-from rest_framework.permissions import IsAuthenticated
+
 
 class PlaceOrderView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request, **kwargs):
-        product_id = kwargs.get('product_id')  # Use kwargs, not request.kwargs
+        product_id = kwargs.get('product_id') 
         quantity = kwargs.get('quantity')
 
-        # Get the Product object using get_object_or_404
+    
         product = get_object_or_404(Product, pk=product_id)
 
         if quantity > product.quantity:
@@ -225,14 +249,7 @@ class LoginView(generics.GenericAPIView):
             return Response({'error': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
         
 
-# views.py
-from rest_framework import status
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.response import Response
-from .models import office, OFFiceBookDesign
-from .serializers import OFFiceBookDesignSerializer,HomeBookDesignSerializer
-from rest_framework.permissions import IsAuthenticated
-from django.shortcuts import get_object_or_404
+
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
@@ -350,13 +367,7 @@ class AgentProductDetailView(generics.RetrieveAPIView):
     lookup_field = 'id'
 
 
-from django.shortcuts import get_object_or_404
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import status
-from .models import WishList, Product
-from .serializers import WishListSerializer
-from rest_framework.permissions import IsAuthenticated
+
 
 class AddToWishListView(APIView):
     permission_classes = [IsAuthenticated]
@@ -364,14 +375,11 @@ class AddToWishListView(APIView):
     def post(self, request, product_id, *args, **kwargs):
         user = request.user
 
-        # Retrieve the product instance based on the provided product ID
         product = get_object_or_404(Product, pk=product_id)
 
-        # Check if the product is already in the wishlist
         if WishList.objects.filter(user=user, product=product).exists():
             return Response({"error": "Product is already in the wishlist"}, status=status.HTTP_400_BAD_REQUEST)
-
-        # Create a wishlist entry for the user with the retrieved product
+        
         serializer = WishListSerializer(data={'user': user.id, 'product': product_id})
         if serializer.is_valid():
             serializer.save()
@@ -392,11 +400,7 @@ class WishListView(generics.ListAPIView):
         query=models.WishList.objects.filter( user=user)
         return query
     
-# views.py
-from rest_framework import generics, permissions, status
-from rest_framework.response import Response
-from .models import WishList
-from .serializers import WishListSerializer
+
 
 class WishListView(generics.ListAPIView):
     queryset = WishList.objects.all()

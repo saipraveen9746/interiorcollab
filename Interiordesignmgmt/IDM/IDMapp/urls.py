@@ -3,7 +3,7 @@ from django.urls import path
 from .views import  UserRegistrationView,OfficeListView
 from .views import ProductListView,ProductDetailView,AddToCart,CartItemsListview,CompanyList,CompanyProductListView,CategoryHomesAPIView,CategoryOfficeApiView
 from .views import AgentProductCreateView,PlaceOrderView,LoginView,book_office,book_home,BookedHomeDetails,BookedOfficeDetails,book_agent_product,OfficeDetailView,HomeDetailView,AgentProductDetailView,BookedAgentProductDetails,RemoveFromWishListView
-from .views import  AddToWishListView,WishListView
+from .views import  AddToWishListView,WishListView,RemoveFromCart,DeleteAgentProduct
 
 urlpatterns = [
     
@@ -15,9 +15,11 @@ urlpatterns = [
     path('cartlist/', CartItemsListview.as_view(), name='cart'),
     # path('cart/<int:product_id>/', CartView.as_view(), name='add-to-cart')
     path('AddToCart/<int:product_id>/<int:quantity>/',AddToCart.as_view(),name='AddToCart'),
+    path('cart/remove/<int:pk>/',RemoveFromCart.as_view(),name='remove-from-cart'),
     path('company-list/', CompanyList.as_view(), name='agent-product-list-create'),
     path('agent-products/<int:user_id>/', CompanyProductListView.as_view(), name='company-product-list'),
     path('agent-product-create/',AgentProductCreateView.as_view(),name='agent-product'),
+    path('delete-agent-product/<int:pk>/', DeleteAgentProduct.as_view(), name='delete-agent-product'),
     path('place_order/<int:product_id>/<int:quantity>/', PlaceOrderView.as_view(), name='place-order'),
     path('homecategory/<str:category>/', CategoryHomesAPIView.as_view(), name='category-homes'),
     path('officecategory/<str:category>/',CategoryOfficeApiView.as_view(),name='category-office'),
