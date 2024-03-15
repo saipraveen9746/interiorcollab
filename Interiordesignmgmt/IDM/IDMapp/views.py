@@ -16,6 +16,10 @@ from .permissions import AgentPermissions,IsCustomer
 from django.contrib.auth import authenticate
 from rest_framework_simplejwt .tokens import RefreshToken
 from rest_framework.decorators import api_view, permission_classes
+from rest_framework import generics
+from .models import WishList
+from .serializers import WishListSerializer
+
 
 
 
@@ -344,3 +348,81 @@ class AgentProductDetailView(generics.RetrieveAPIView):
     queryset = AgentProduct.objects.all()
     serializer_class = AgentDetailserializer
     lookup_field = 'id'
+
+
+from django.shortcuts import get_object_or_404
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from .models import WishList, Product
+from .serializers import WishListSerializer
+from rest_framework.permissions import IsAuthenticated
+
+class AddToWishListView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, product_id, *args, **kwargs):
+        user = request.user
+
+        # Retrieve the product instance based on the provided product ID
+        product = get_object_or_404(Product, pk=product_id)
+
+        # Check if the product is already in the wishlist
+        if WishList.objects.filter(user=user, product=product).exists():
+            return Response({"error": "Product is already in the wishlist"}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Create a wishlist entry for the user with the retrieved product
+        serializer = WishListSerializer(data={'user': user.id, 'product': product_id})
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+    
+
+class WishListView(generics.ListAPIView):
+    serializer_class=serializers.WishListSerializer
+    queryset=models.WishList.objects.all()
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        user=self.request.user
+        query=models.WishList.objects.filter( user=user)
+        return query
+    
+# views.py
+from rest_framework import generics, permissions, status
+from rest_framework.response import Response
+from .models import WishList
+from .serializers import WishListSerializer
+
+class WishListView(generics.ListAPIView):
+    queryset = WishList.objects.all()
+    serializer_class = WishListSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        return self.queryset.filter(user=self.request.user)
+
+class RemoveFromWishListView(generics.DestroyAPIView):
+    queryset = WishList.objects.all()
+    serializer_class = WishListSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def delete(self, request, *args, **kwargs):
+        product_id = kwargs.get('pk')
+        if not product_id:
+            return Response({"error": "Product ID is required"}, status=status.HTTP_400_BAD_REQUEST)
+
+        user = request.user
+
+        # Check if the product is in the wishlist
+        wish_list_item = WishList.objects.filter(user=user, product_id=product_id).first()
+        if not wish_list_item:
+            return Response({"error": "Product is not in the wishlist"}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Delete the product from the wishlist
+        wish_list_item.delete()
+        return Response({"success": "Product removed from wishlist"}, status=status.HTTP_204_NO_CONTENT)

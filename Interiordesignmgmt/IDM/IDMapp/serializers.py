@@ -3,7 +3,7 @@ from django.contrib.auth.models import User
 from django.contrib.auth import authenticate
 
 
-from .models import office,Home,Product,CartItem,Cart,Order,CustomUser,AgentProduct,OFFiceBookDesign,HomeBookDesign,AgentProductBooking
+from .models import office,Home,Product,CartItem,Cart,Order,CustomUser,AgentProduct,OFFiceBookDesign,HomeBookDesign,AgentProductBooking,WishList
 from IDMapp import models
 
 class UserRegistrationSerializer(serializers.ModelSerializer):
@@ -200,3 +200,12 @@ class AgentDetailserializer(serializers.ModelSerializer):
     class Meta:
         model = AgentProduct
         fields = '__all__'
+
+
+class WishListSerializer(serializers.ModelSerializer):
+    product = ProductSerializer(read_only=True)
+    class Meta:
+        model = WishList
+        fields = ['user','id','product']
+
+
