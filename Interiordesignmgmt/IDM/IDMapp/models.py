@@ -210,8 +210,19 @@ class AgentProductBooking(models.Model):
     email = models.TextField(max_length=10000,null = True)
     contact_no = models.BigIntegerField(null=True)
     address = models.TextField(null=True)
-class WishList(models.Model):
-    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE,limit_choices_to={'user_type': 'Customer'},null=True)
+
+
+
+
+
+class ContactUS(models.Model):
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE,limit_choices_to={'user_type': 'Customer'},null=True )
+    name = models.CharField(max_length=200)
+    email = models.EmailField()
+    contact_no = models.BigIntegerField(null=True)
+    description = models.TextField(null=True)
+
+
+class ListWish(models.Model):
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE,limit_choices_to={'user_type': 'Customer'},null=True )
     product = models.ForeignKey(Product,on_delete=models.CASCADE)
-    
-    

@@ -3,7 +3,7 @@ from django.contrib.auth.models import User
 from django.contrib.auth import authenticate
 
 
-from .models import office,Home,Product,CartItem,Cart,Order,CustomUser,AgentProduct,OFFiceBookDesign,HomeBookDesign,AgentProductBooking,WishList
+from .models import office,Home,Product,CartItem,Cart,Order,CustomUser,AgentProduct,OFFiceBookDesign,HomeBookDesign,AgentProductBooking,ListWish,ContactUS
 from IDMapp import models
 
 class UserRegistrationSerializer(serializers.ModelSerializer):
@@ -54,6 +54,7 @@ class CartItemSerializer(serializers.ModelSerializer):
     class Meta:
         model = CartItem
         fields = '__all__'
+
 
 class CartSerializer(serializers.ModelSerializer):
     user = UserSerializer()
@@ -203,9 +204,22 @@ class AgentDetailserializer(serializers.ModelSerializer):
 
 
 class WishListSerializer(serializers.ModelSerializer):
-    product = ProductSerializer(read_only=True)
     class Meta:
-        model = WishList
-        fields = ['user','id','product']
+        model = ListWish
+        fields = ['user','id','product_id']
 
 
+
+class ContactUSSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ContactUS
+        fields = ('id', 'name', 'email', 'contact_no', 'description')
+
+    def create(self, validated_data):
+        return ContactUS.objects.create(**validated_data)
+
+
+class CustomUserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CustomUser
+        fields = ['id', 'username', 'email', 'user_type']

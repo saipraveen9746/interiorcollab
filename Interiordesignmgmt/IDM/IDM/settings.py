@@ -135,7 +135,7 @@ WSGI_APPLICATION = 'IDM.wsgi.application'
 DATABASES = {
     'default':{
         'ENGINE':'django.db.backends.mysql',
-        'NAME':'interiordesign2',
+        'NAME':'interior',
         'USER':'root',
         'PASSWORD':'2460480sai',
         'HOST':'localhost',
