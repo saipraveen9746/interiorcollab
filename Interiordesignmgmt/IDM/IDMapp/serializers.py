@@ -206,7 +206,13 @@ class AgentDetailserializer(serializers.ModelSerializer):
 class WishListSerializer(serializers.ModelSerializer):
     class Meta:
         model = ListWish
-        fields = ['user','id','product_id']
+        fields = ['user','id','product']
+class WishLIstViewSerializer(serializers.ModelSerializer):
+    product = ProductSerializer(read_only=True)
+    class Meta:
+        model = ListWish
+        fields ='__all__'
+
 
 
 

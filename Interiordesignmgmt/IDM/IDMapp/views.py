@@ -5,7 +5,7 @@ from rest_framework import status,generics,permissions
 from .serializers import  UserRegistrationSerializer,OfficeSerializer
 from .models import Order, office,Home,Product,Cart,CartItem,AgentProduct,CustomUser,HomeBookDesign,AgentProductBooking,ListWish
 from .serializers import ProductListserializer,ProductDetailserializer,CartSerializer,CompanyNameSerializer,AgentProductSerializer,HomeSerializer,AgentbookSerializer,OfficeDetailserializer,HomeDetailserializer,AgentDetailserializer,CartItemSerializer,WishListSerializer,OrderSerializer,OFFiceBookDesign,ContactUSSerializer,CustomUserSerializer
-from .serializers import OFFiceBookDesignSerializer,HomeBookDesignSerializer
+from .serializers import OFFiceBookDesignSerializer,HomeBookDesignSerializer,WishLIstViewSerializer
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 from .main import RazorpayClient
@@ -372,26 +372,6 @@ class AgentProductDetailView(generics.RetrieveAPIView):
 
 
 
-# class AddToWishListView(APIView):
-#     permission_classes = [IsAuthenticated]
-
-#     def post(self, request, product_id, *args, **kwargs):
-#         user = request.user
-#         try:
-#             product = Product.objects.get(pk=product_id)
-#         except Product.DoesNotExist:
-#             return Response({"error":"Product does not exist"},status=status.HTTP_404_NOT_FOUND)
-
-#         if ListWish.objects.filter(user=user, product=product).exists():
-#             return Response({"error": "Product is already in the wishlist"}, status=status.HTTP_400_BAD_REQUEST)
-        
-#         serializer = WishListSerializer(data={'user': user.id, 'product': product_id})
-#         if serializer.is_valid():
-#             serializer.save()
-#             return Response(serializer.data, status=status.HTTP_201_CREATED)
-#         else:
-#             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
 class AddToWishListView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -404,17 +384,16 @@ class AddToWishListView(APIView):
 
         if ListWish.objects.filter(user=user, product=product).exists():
             return Response({"error": "Product is already in the wishlist"}, status=status.HTTP_400_BAD_REQUEST)
-
-        # Fix 1: Ensure product_id is present in request data
-        if 'product_id' not in request.data:
-            return Response({"error": "Missing product_id in request data"}, status=status.HTTP_400_BAD_REQUEST)
-
-        serializer = WishListSerializer(data=request.data)
+        
+        # Pass partial=True to allow partial updates
+        serializer = WishListSerializer(data={'user': user.id, 'product': product_id}, partial=True)
         if serializer.is_valid():
             serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
+            return Response([serializer.data], status=status.HTTP_201_CREATED)
         else:
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            return Response([serializer.errors], status=status.HTTP_400_BAD_REQUEST)
+    
+
     
 
 class WishListView(generics.ListAPIView):
@@ -431,7 +410,7 @@ class WishListView(generics.ListAPIView):
 
 class WishListView(generics.ListAPIView):
     queryset = ListWish.objects.all()
-    serializer_class = WishListSerializer
+    serializer_class = WishLIstViewSerializer
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
