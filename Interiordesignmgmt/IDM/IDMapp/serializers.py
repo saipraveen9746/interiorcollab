@@ -90,7 +90,7 @@ class CompanyNameSerializer(serializers.ModelSerializer):
 class AgentProductSerializer(serializers.ModelSerializer):
     class Meta:
         model = AgentProduct
-        fields = ['name', 'photo', 'price', 'description', 'propertytype', 'catgory',]
+        fields = ['id','name', 'photo', 'price', 'description', 'propertytype', 'catgory',]
 
     def create(self, validated_data):
         user = self.context['request'].user
