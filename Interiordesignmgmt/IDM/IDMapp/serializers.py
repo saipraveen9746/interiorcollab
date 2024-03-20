@@ -229,3 +229,11 @@ class CustomUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomUser
         fields = ['id', 'username', 'email', 'user_type']
+
+
+
+class AgentProductDetailsSerializer(serializers.ModelSerializer):
+    product = AgentProductSerializer(read_only=True)
+    class Meta:
+        model = AgentProduct
+        fields = ['id','user','name','photo','price','description','propertytype','catgory']

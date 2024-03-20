@@ -4,7 +4,7 @@ from rest_framework.response import Response
 from rest_framework import status,generics,permissions
 from .serializers import  UserRegistrationSerializer,OfficeSerializer
 from .models import Order, office,Home,Product,Cart,CartItem,AgentProduct,CustomUser,HomeBookDesign,AgentProductBooking,ListWish
-from .serializers import ProductListserializer,ProductDetailserializer,CartSerializer,CompanyNameSerializer,AgentProductSerializer,HomeSerializer,AgentbookSerializer,OfficeDetailserializer,HomeDetailserializer,AgentDetailserializer,CartItemSerializer,WishListSerializer,OrderSerializer,OFFiceBookDesign,ContactUSSerializer,CustomUserSerializer
+from .serializers import ProductListserializer,ProductDetailserializer,CartSerializer,CompanyNameSerializer,AgentProductSerializer,HomeSerializer,AgentbookSerializer,OfficeDetailserializer,HomeDetailserializer,AgentDetailserializer,CartItemSerializer,WishListSerializer,OrderSerializer,OFFiceBookDesign,ContactUSSerializer,CustomUserSerializer,AgentProductDetailsSerializer
 from .serializers import OFFiceBookDesignSerializer,HomeBookDesignSerializer,WishLIstViewSerializer
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
@@ -126,7 +126,7 @@ class CompanyList(generics.ListAPIView):
 
 
 class CompanyProductListView(generics.ListAPIView):
-    serializer_class = AgentProductSerializer
+    serializer_class = AgentProductDetailsSerializer
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
@@ -455,5 +455,4 @@ def contact_us(request):
 class AgentListView(generics.ListAPIView):
     queryset = CustomUser.objects.filter(user_type='agent')
     serializer_class = CustomUserSerializer
-
 
