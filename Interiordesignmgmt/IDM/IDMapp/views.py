@@ -4,7 +4,7 @@ from rest_framework.response import Response
 from rest_framework import status,generics,permissions
 from .serializers import  UserRegistrationSerializer,OfficeSerializer
 from .models import Order, office,Home,Product,Cart,CartItem,AgentProduct,CustomUser,HomeBookDesign,AgentProductBooking,ListWish
-from .serializers import ProductListserializer,ProductDetailserializer,CartSerializer,CompanyNameSerializer,AgentProductSerializer,HomeSerializer,AgentbookSerializer,OfficeDetailserializer,HomeDetailserializer,AgentDetailserializer,CartItemSerializer,WishListSerializer,OrderSerializer,OFFiceBookDesign,ContactUSSerializer,CustomUserSerializer,AgentProductDetailsSerializer
+from .serializers import ProductListserializer,ProductDetailserializer,CartSerializer,CompanyNameSerializer,AgentProductSerializer,HomeSerializer,AgentbookSerializer,OfficeDetailserializer,HomeDetailserializer,AgentDetailserializer,CartItemSerializer,WishListSerializer,OrderSerializer,OFFiceBookDesign,ContactUSSerializer,CustomUserSerializer,AgentProductDetailsSerializer,ProductBuySerializer
 from .serializers import OFFiceBookDesignSerializer,HomeBookDesignSerializer,WishLIstViewSerializer
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
@@ -47,6 +47,7 @@ class ProductDetailView(generics.RetrieveAPIView):
     
 
 class AddToCart(generics.CreateAPIView):
+    permission_classes = [IsAuthenticated]
     serializer_class = serializers.CartItemSerializer
 
     def post(self, request, *args, **kwargs):     
@@ -455,4 +456,23 @@ def contact_us(request):
 class AgentListView(generics.ListAPIView):
     queryset = CustomUser.objects.filter(user_type='agent')
     serializer_class = CustomUserSerializer
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def buy_product(request, product_id):
+
+    agent = get_object_or_404(Product, pk=product_id)
+
+    if request.user.user_type != 'Customer':
+        return Response({'error': 'Only customers can buy products.'}, status=status.HTTP_403_FORBIDDEN)
+
+
+    if request.method == 'POST':
+        serializer = ProductBuySerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save(user=request.user, product=agent)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 

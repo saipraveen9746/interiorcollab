@@ -226,3 +226,22 @@ class ContactUS(models.Model):
 class ListWish(models.Model):
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE,limit_choices_to={'user_type': 'Customer'},null=True )
     product = models.ForeignKey(Product,on_delete=models.CASCADE)
+
+class ProductBuy(models.Model):
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, limit_choices_to={'user_type': 'Customer'}, null=True)
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    name = models.CharField(max_length=200)
+    apartment = models.CharField(max_length=200) 
+    place = models.CharField(max_length=200)
+    pincode = models.IntegerField()
+    phone_number = models.BigIntegerField()
+    total_price = models.DecimalField(decimal_places=2, max_digits=10, default=0)  
+
+    def save(self, *args, **kwargs):
+        cart_item = CartItem.objects.filter(product=self.product, cart__user=self.user).first()
+        if cart_item:
+            self.total_price = cart_item.total_price
+        super().save(*args, **kwargs)
+
+
+
