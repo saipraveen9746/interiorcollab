@@ -7,6 +7,7 @@ from .models import Order, office,Home,Product,Cart,CartItem,AgentProduct,Custom
 from .serializers import ProductListserializer,ProductDetailserializer,CartSerializer,CompanyNameSerializer,AgentProductSerializer,HomeSerializer,AgentbookSerializer,OfficeDetailserializer,HomeDetailserializer,AgentDetailserializer,CartItemSerializer,WishListSerializer,OrderSerializer,OFFiceBookDesign,ContactUSSerializer,CustomUserSerializer,AgentProductDetailsSerializer,ProductBuySerializer
 from .serializers import OFFiceBookDesignSerializer,HomeBookDesignSerializer,WishLIstViewSerializer
 from rest_framework.views import APIView
+from .models import ProductBuy
 from rest_framework.permissions import IsAuthenticated
 from .main import RazorpayClient
 from rest_framework import viewsets
@@ -239,9 +240,11 @@ class LoginView(generics.GenericAPIView):
             return Response({
                 'refresh': str(refresh),
                 'access': str(refresh.access_token),
+                'user_id': user.id,
                 'username': user.username,
                 'email': user.email,
-                'user_type' : user.user_type
+                'user_type' : user.user_type,
+               
                 
 
 
@@ -458,21 +461,26 @@ class AgentListView(generics.ListAPIView):
     serializer_class = CustomUserSerializer
 
 
+
+
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
-def buy_product(request, product_id):
+def purchase_product(request, product_id):
 
-    agent = get_object_or_404(Product, pk=product_id)
+    customer = get_object_or_404(Product, pk=product_id)
 
     if request.user.user_type != 'Customer':
         return Response({'error': 'Only customers can buy products.'}, status=status.HTTP_403_FORBIDDEN)
+    if request.method == 'POST':
+        quantity = int(request.data.get('quantity', 1))
+        if customer.quantity < quantity:
+            return Response({'error': 'No quantity available.'}, status=status.HTTP_400_BAD_REQUEST)
+
 
 
     if request.method == 'POST':
         serializer = ProductBuySerializer(data=request.data)
         if serializer.is_valid():
-            serializer.save(user=request.user, product=agent)
+            serializer.save(user=request.user, product=customer)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-

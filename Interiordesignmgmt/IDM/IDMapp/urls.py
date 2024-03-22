@@ -3,7 +3,7 @@ from django.urls import path
 from .views import  UserRegistrationView,OfficeListView
 from .views import ProductListView,ProductDetailView,AddToCart,CartItemsListview,CompanyList,CompanyProductListView,CategoryHomesAPIView,CategoryOfficeApiView
 from .views import AgentProductCreateView,PlaceOrderView,LoginView,book_office,book_home,BookedHomeDetails,BookedOfficeDetails,book_agent_product,OfficeDetailView,HomeDetailView,AgentProductDetailView,BookedAgentProductDetails,RemoveFromWishListView
-from .views import  AddToWishListView,WishListView,RemoveFromCart,DeleteAgentProduct,contact_us,AgentListView,buy_product
+from .views import  AddToWishListView,WishListView,RemoveFromCart,DeleteAgentProduct,contact_us,AgentListView,purchase_product
 
 urlpatterns = [
     
@@ -38,7 +38,9 @@ urlpatterns = [
     path('wishlist/remove/<int:pk>/', RemoveFromWishListView.as_view(), name='remove-from-wishlist'),
     path('contact-us/', contact_us, name='contact_us'),
     path('agent-list-view/',AgentListView.as_view(),name='agent-list-view'),
-    path('productbuy/<int:product_id>/book/',buy_product,name='buyproduct'),
+    path('product_buy/<int:product_id>/',purchase_product,name='product-buy')
+
+
     
     
     

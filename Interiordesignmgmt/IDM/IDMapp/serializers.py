@@ -241,8 +241,36 @@ class AgentProductDetailsSerializer(serializers.ModelSerializer):
 
 
 
+
+
+
+# class ProductItemSerializer(serializers.ModelSerializer):
+#     product = ProductSerializer()
+
+#     class Meta:
+#         model = ProductItem
+#         fields = ['product', 'quantity']
+
 class ProductBuySerializer(serializers.ModelSerializer):
-    product = ProductSerializer(read_only=True)
+    # items = ProductItemSerializer(many=True)
+
     class Meta:
         model = ProductBuy
-        fields = ['name', 'apartement', 'place', 'pincode','phone_number','total_price','product']
+        fields = [ 'name', 'apartment', 'place', 'pincode', 'phone_number','quantity','product']
+
+    def create(self, validated_data):
+        # Assuming 'product' is included in the request data
+        product = validated_data.pop('product',None)
+        quantity = validated_data.pop('quantity',None)
+
+        if product is None:
+            raise serializers.ValidationError("Product is required.")
+        if quantity is None:
+            raise serializers.ValidationError("Quantity is required.")
+
+        # Calculate total price based on the product and quantity
+        total_price = product.price * quantity
+
+        # Create the ProductBuy instance
+        product_buy = ProductBuy.objects.create(product=product, quantity=quantity, total_price=total_price, **validated_data)
+        return product_buy

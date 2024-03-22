@@ -229,19 +229,23 @@ class ListWish(models.Model):
 
 class ProductBuy(models.Model):
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, limit_choices_to={'user_type': 'Customer'}, null=True)
-    product = models.ForeignKey(Product, on_delete=models.CASCADE)
     name = models.CharField(max_length=200)
     apartment = models.CharField(max_length=200) 
     place = models.CharField(max_length=200)
     pincode = models.IntegerField()
     phone_number = models.BigIntegerField()
-    total_price = models.DecimalField(decimal_places=2, max_digits=10, default=0)  
+    quantity = models.IntegerField(null=True)
+    total_price = models.DecimalField(max_digits=10, decimal_places=2)
+    product = models.ForeignKey(Product,on_delete=models.CASCADE,null=True)
 
+
+    
     def save(self, *args, **kwargs):
-        cart_item = CartItem.objects.filter(product=self.product, cart__user=self.user).first()
-        if cart_item:
-            self.total_price = cart_item.total_price
-        super().save(*args, **kwargs)
+        self.total_price = self.product.price * self.quantity
+        self.product.quantity -= self.quantity
+        self.product.save()
+        super(ProductBuy, self).save(*args, **kwargs)
+
 
 
 
