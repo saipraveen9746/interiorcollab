@@ -3,7 +3,7 @@ from django.contrib.auth.models import User
 from django.contrib.auth import authenticate
 
 
-from .models import office,Home,Product,CartItem,Cart,Order,CustomUser,AgentProduct,OFFiceBookDesign,HomeBookDesign,AgentProductBooking,ListWish,ContactUS,ProductBuy
+from .models import office,Home,Product,CartItem,Cart,Order,CustomUser,AgentProduct,OFFiceBookDesign,HomeBookDesign,AgentProductBooking,ListWish,ContactUS,ProductBuy,CartBuy,Order_Items,CartBuyItem
 from IDMapp import models
 
 class UserRegistrationSerializer(serializers.ModelSerializer):
@@ -274,3 +274,25 @@ class ProductBuySerializer(serializers.ModelSerializer):
         # Create the ProductBuy instance
         product_buy = ProductBuy.objects.create(product=product, quantity=quantity, total_price=total_price, **validated_data)
         return product_buy
+    
+
+class CartBuyItemSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CartBuyItem
+        fields = ['product', 'quantity', 'price']
+        extra_kwargs = {
+            'product': {'required': False}  # Marking product field as not required
+        }
+        
+        
+
+class CartBuySerializer(serializers.ModelSerializer):
+    items = CartBuyItemSerializer(many=True, read_only=True)
+    class Meta:
+        model = CartBuy
+        fields = '__all__'
+
+
+
+
+

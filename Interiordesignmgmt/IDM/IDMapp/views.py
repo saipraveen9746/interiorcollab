@@ -3,11 +3,11 @@ from django.shortcuts import get_object_or_404, render
 from rest_framework.response import Response
 from rest_framework import status,generics,permissions
 from .serializers import  UserRegistrationSerializer,OfficeSerializer
-from .models import Order, office,Home,Product,Cart,CartItem,AgentProduct,CustomUser,HomeBookDesign,AgentProductBooking,ListWish
+from .models import Order, office,Home,Product,Cart,CartItem,AgentProduct,CustomUser,HomeBookDesign,AgentProductBooking,ListWish,CartBuyItem
 from .serializers import ProductListserializer,ProductDetailserializer,CartSerializer,CompanyNameSerializer,AgentProductSerializer,HomeSerializer,AgentbookSerializer,OfficeDetailserializer,HomeDetailserializer,AgentDetailserializer,CartItemSerializer,WishListSerializer,OrderSerializer,OFFiceBookDesign,ContactUSSerializer,CustomUserSerializer,AgentProductDetailsSerializer,ProductBuySerializer
-from .serializers import OFFiceBookDesignSerializer,HomeBookDesignSerializer,WishLIstViewSerializer
+from .serializers import OFFiceBookDesignSerializer,HomeBookDesignSerializer,WishLIstViewSerializer,CartBuySerializer,CartBuyItemSerializer
 from rest_framework.views import APIView
-from .models import ProductBuy
+from .models import ProductBuy,CartBuy,Order_Items
 from rest_framework.permissions import IsAuthenticated
 from .main import RazorpayClient
 from rest_framework import viewsets
@@ -312,33 +312,37 @@ class BookedHomeDetails(generics.ListAPIView):
         return query
     
 
+
 class BookedOfficeDetails(generics.ListAPIView):
-    serializer_class = serializers.OFFiceBookDesignSerializer
-    queryset = models.OFFiceBookDesign.objects.all()
+    serializer_class = serializers.AgentbookSerializer
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        user=self.request.user
-        query = models.OFFiceBookDesign.objects.filter(user_id=user)
-        return query
+        company_id = self.kwargs.get('company_id')
+        queryset = models.AgentProductBooking.objects.filter(product__user_id=self.request.user.id, product__company_id=company_id)
+        return queryset
     
+
+
+    
+
+
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def book_agent_product(request, product_id):
-
-    agent = get_object_or_404(AgentProduct, pk=product_id)
+    agent_product = get_object_or_404(AgentProduct, pk=product_id)
 
     if request.user.user_type != 'Customer':
         return Response({'error': 'Only customers can book agent products.'}, status=status.HTTP_403_FORBIDDEN)
 
-    if AgentProductBooking.objects.filter(user=request.user, product=agent).exists():
+    if AgentProductBooking.objects.filter(user=request.user, product=agent_product).exists():
         return Response({'error': 'You have already booked this agent product.'}, status=status.HTTP_400_BAD_REQUEST)
 
     if request.method == 'POST':
         serializer = AgentbookSerializer(data=request.data)
         if serializer.is_valid():
-            serializer.save(user=request.user, product=agent)
+            serializer.save(user=request.user, agent=agent_product.user, product=agent_product)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
@@ -350,7 +354,7 @@ class BookedAgentProductDetails(generics.ListAPIView):
 
     def get_queryset(self):
         user=self.request.user
-        query = models.AgentProductBooking.objects.filter(user_id=user)
+        query = models.AgentProductBooking.objects.filter(agent_id=user)
         return query
 
 
@@ -484,3 +488,67 @@ def purchase_product(request, product_id):
             serializer.save(user=request.user, product=customer)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+
+# @api_view(['POST'])
+# @permission_classes([IsAuthenticated])
+# def cart_purchase(request, product_id):
+
+#     customer = get_object_or_404(Cart, pk=product_id)
+
+#     if request.user.user_type != 'Customer':
+#         return Response({'error': 'Only customers can buy products.'}, status=status.HTTP_403_FORBIDDEN)
+
+#     if request.method == 'POST':
+#         serializer = CartBuySerializer(data=request.data)
+#         if serializer.is_valid():
+#             serializer.save(user=request.user, product=customer)
+#             customer.clear_cart()
+#             return Response(serializer.data, status=status.HTTP_201_CREATED)
+#         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def cart_purchase(request, product_id):
+    customer_cart = get_object_or_404(Cart, pk=product_id)
+
+    if request.user.user_type != 'Customer':
+        return Response({'error': 'Only customers can buy products.'}, status=status.HTTP_403_FORBIDDEN)
+
+    if request.method == 'POST':
+        total_price = customer_cart.total_price
+        serializer = CartBuySerializer(data={
+            'user': request.user.id,
+            'product': customer_cart.id,
+            'total_price': total_price,
+            'name': request.data.get('name'),
+            'apartment': request.data.get('apartment'),
+            'place': request.data.get('place'),
+            'pincode': request.data.get('pincode'),
+            'phone_number': request.data.get('phone_number'),
+        })
+        if serializer.is_valid():
+            # Create a CartBuy instance
+            serializer.save()
+
+            # Iterate over items in the cart to deduct the purchased quantity from the Product table
+            for cart_item in customer_cart.cartitem_set.all():
+                product = cart_item.product
+                purchased_quantity = cart_item.quantity
+
+                # Ensure there is enough quantity of the product in stock
+                if product.quantity >= purchased_quantity:
+                    product.quantity -= purchased_quantity
+                    product.save()
+                else:
+                    # If insufficient quantity, rollback the transaction and return an error response
+                    serializer.instance.delete()
+                    return Response({'error': f'Insufficient quantity for {product.Name}'}, status=status.HTTP_400_BAD_REQUEST)
+
+            # Clear the customer's cart after successful purchase
+            customer_cart.clear_cart()
+
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
