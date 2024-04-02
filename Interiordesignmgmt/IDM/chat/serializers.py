@@ -1,23 +1,22 @@
 from rest_framework import serializers
-from .models import Message,ChatRoom
+from .models import Message
+
+
+
+
+
 
 class MessageSerializer(serializers.ModelSerializer):
-    sender_name = serializers.SerializerMethodField()
-
     class Meta:
         model = Message
-        fields = ['id', 'content', 'timestamp', 'sender', 'sender_name', 'chat_room']
+        fields = ['message']
 
-    def get_sender_name(self, obj):
-        return obj.sender.username
-
-class ChatRoomSerializer(serializers.ModelSerializer):
-    messages = MessageSerializer(many=True, read_only=True)
-
+class MessageListSerializer(serializers.ModelSerializer):
+    sender_username = serializers.ReadOnlyField(source='sender.username')
+    receiver_username = serializers.ReadOnlyField(source='receiver.username')
     class Meta:
-        model = ChatRoom
-        fields = ['id', 'name', 'description', 'participants', 'messages']
-        depth = 1
+        model = Message
+        fields = ['sender_username','receiver_username','is_read','timestamp','message']
+
+
         
-
-

@@ -3,19 +3,17 @@
     
 
 from django.db import models
-from django.contrib.auth.models import User
 from django.contrib.auth import get_user_model
+from IDMapp.models import CustomUser
 
-User = get_user_model()
 
-class ChatRoom(models.Model):
-    name = models.CharField(max_length=255)
-    description = models.TextField(null=True, blank=True)
-    participants = models.ManyToManyField(User, related_name='chat_rooms')
 
 class Message(models.Model):
-    content = models.TextField()
+    sender = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='sent_messages',null=True)
+    receiver = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='received_messages',default = 1)
+    message = models.TextField(null=True)
     timestamp = models.DateTimeField(auto_now_add=True)
-    sender = models.ForeignKey(User, on_delete=models.CASCADE)
-    chat_room = models.ForeignKey(ChatRoom, on_delete=models.CASCADE, related_name='messages')
 
+    def _str_(self):
+        return f"From: {self.sender} - To: {self.receiver}"
+    

@@ -1,9 +1,11 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate
+from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError
 
 
-from .models import office,Home,Product,CartItem,Cart,Order,CustomUser,AgentProduct,OFFiceBookDesign,HomeBookDesign,AgentProductBooking,ListWish,ContactUS,ProductBuy,CartBuy,Order_Items,CartBuyItem
+from .models import Cart_Buy, office,Home,Product,CartItem,Cart,Order,CustomUser,AgentProduct,OFFiceBookDesign,HomeBookDesign,AgentProductBooking,ListWish,ContactUS,ProductBuy,CartBuy,Order_Items,CartBuyItem
 from IDMapp import models
 
 class UserRegistrationSerializer(serializers.ModelSerializer):
@@ -11,6 +13,17 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         model = CustomUser
         fields = ['username', 'password', 'email' , 'user_type']  
         extra_kwargs = {'password': {'write_only': True}}
+    def validate_email(self, email):
+        if CustomUser.objects.filter(email=email).exists():
+            raise serializers.ValidationError("This email is already in use.")
+        return email
+
+    def validate_password(self, password):
+        try:
+            validate_password(password)
+        except ValidationError as e:
+            raise serializers.ValidationError(str(e))
+        return password
 
     def create(self, validated_data):
         user = CustomUser.objects.create_user(
@@ -294,5 +307,8 @@ class CartBuySerializer(serializers.ModelSerializer):
 
 
 
-
+class Cart_BuySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Cart_Buy
+        fields = '__all__'
 

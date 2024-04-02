@@ -83,10 +83,13 @@ class Cart(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+
     def update_total_price(self):
         total_price = sum(item.total_price for item in self.cartitem_set.all())
         self.total_price = total_price
         self.save()
+
+
     def clear_cart(self):
         self.cartitem_set.all().delete()
 
@@ -109,6 +112,7 @@ class CartItem(models.Model):
         self.total_price = self.product.price * self.quantity
         super(CartItem, self).save(*args, **kwargs)
         self.cart.update_total_price()
+
 
 
 
@@ -256,11 +260,57 @@ class ProductBuy(models.Model):
 
 
 
+# class CartBuy(models.Model):
+#     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, limit_choices_to={'user_type': 'Customer'}, null=True)
+#     product = models.ForeignKey(Cart,on_delete=models.CASCADE)
+#     total_price = models.DecimalField(max_digits=10,decimal_places=2)
+#     name = models.CharField(max_length=200)
+#     apartment = models.CharField(max_length=200) 
+#     place = models.CharField(max_length=200)
+#     pincode = models.IntegerField()
+#     phone_number = models.BigIntegerField()
+
+
+#     def save(self, *args, **kwargs):
+#         cart_instance = self.product
+#         total_price = cart_instance.total_price
+#         self.total_price = total_price
+
+#         super().save(*args, **kwargs)
+
+
+# class CartBuyItem(models.Model):
+#     cart_buy = models.ForeignKey(CartBuy, on_delete=models.CASCADE, related_name='items')
+#     product = models.ForeignKey(Cart, on_delete=models.CASCADE)
+#     quantity = models.IntegerField()
+#     price = models.DecimalField(max_digits=10, decimal_places=2)
+
+#     def save(self, *args, **kwargs):
+#         self.price = self.product.price * self.quantity
+#         super().save(*args, **kwargs)
+
+
+
+class Order_Items(models.Model):
+    product_id = models.ForeignKey(Product, on_delete=models.CASCADE)
+    user_id = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
+    quantity = models.IntegerField()
+    order_date = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return str(self.user_id)
+
+        
+
+
+
+
+
 class CartBuy(models.Model):
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, limit_choices_to={'user_type': 'Customer'}, null=True)
-    product = models.ForeignKey(Cart,on_delete=models.CASCADE)
+    product = models.ManyToManyField(CartItem)
     total_price = models.DecimalField(max_digits=10,decimal_places=2)
-    name = models.CharField(max_length=200)
+    name = models.CharField(max_length=200,null=True)
     apartment = models.CharField(max_length=200) 
     place = models.CharField(max_length=200)
     pincode = models.IntegerField()
@@ -275,26 +325,27 @@ class CartBuy(models.Model):
         super().save(*args, **kwargs)
 
 
+
 class CartBuyItem(models.Model):
     cart_buy = models.ForeignKey(CartBuy, on_delete=models.CASCADE, related_name='items')
-    product = models.ForeignKey(Cart, on_delete=models.CASCADE)
-    quantity = models.IntegerField()
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    quantity = models.PositiveIntegerField()
     price = models.DecimalField(max_digits=10, decimal_places=2)
-
     def save(self, *args, **kwargs):
         self.price = self.product.price * self.quantity
         super().save(*args, **kwargs)
 
 
 
-class Order_Items(models.Model):
-    product_id = models.ForeignKey(Product, on_delete=models.CASCADE)
-    user_id = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
-    quantity = models.IntegerField()
-    order_date = models.DateTimeField(auto_now_add=True)
 
-    def __str__(self):
-        return str(self.user_id)
+class Cart_Buy(models.Model):
+    product_name = models.CharField(max_length=255)
+    pincode = models.CharField(max_length=10)
+    name = models.CharField(max_length=200,null=True)
+    apartment = models.CharField(max_length=200) 
+    place = models.CharField(max_length=200)
+    pincode = models.IntegerField()
+    phone_number = models.BigIntegerField()
 
-        
+
 

@@ -2,10 +2,10 @@ import time
 from django.shortcuts import get_object_or_404, render
 from rest_framework.response import Response
 from rest_framework import status,generics,permissions
-from .serializers import  UserRegistrationSerializer,OfficeSerializer
-from .models import Order, office,Home,Product,Cart,CartItem,AgentProduct,CustomUser,HomeBookDesign,AgentProductBooking,ListWish,CartBuyItem
+from .serializers import  Cart_BuySerializer, UserRegistrationSerializer,OfficeSerializer
+from .models import Cart_Buy, Order, office,Home,Product,Cart,CartItem,AgentProduct,CustomUser,HomeBookDesign,AgentProductBooking,ListWish,CartBuyItem
 from .serializers import ProductListserializer,ProductDetailserializer,CartSerializer,CompanyNameSerializer,AgentProductSerializer,HomeSerializer,AgentbookSerializer,OfficeDetailserializer,HomeDetailserializer,AgentDetailserializer,CartItemSerializer,WishListSerializer,OrderSerializer,OFFiceBookDesign,ContactUSSerializer,CustomUserSerializer,AgentProductDetailsSerializer,ProductBuySerializer
-from .serializers import OFFiceBookDesignSerializer,HomeBookDesignSerializer,WishLIstViewSerializer,CartBuySerializer,CartBuyItemSerializer
+from .serializers import OFFiceBookDesignSerializer,HomeBookDesignSerializer,WishLIstViewSerializer,CartBuySerializer
 from rest_framework.views import APIView
 from .models import ProductBuy,CartBuy,Order_Items
 from rest_framework.permissions import IsAuthenticated
@@ -17,7 +17,7 @@ from rest_framework_simplejwt .tokens import RefreshToken
 from rest_framework.decorators import api_view, permission_classes
 from IDMapp import models
 from IDMapp import serializers
-
+from rest_framework.viewsets import ModelViewSet,ViewSet
 
 
 
@@ -324,6 +324,8 @@ class BookedOfficeDetails(generics.ListAPIView):
     
 
 
+
+
     
 
 
@@ -529,26 +531,42 @@ def cart_purchase(request, product_id):
             'phone_number': request.data.get('phone_number'),
         })
         if serializer.is_valid():
-            # Create a CartBuy instance
+            
             serializer.save()
 
-            # Iterate over items in the cart to deduct the purchased quantity from the Product table
+       
             for cart_item in customer_cart.cartitem_set.all():
                 product = cart_item.product
                 purchased_quantity = cart_item.quantity
 
-                # Ensure there is enough quantity of the product in stock
+               
                 if product.quantity >= purchased_quantity:
                     product.quantity -= purchased_quantity
                     product.save()
                 else:
-                    # If insufficient quantity, rollback the transaction and return an error response
+                    
                     serializer.instance.delete()
                     return Response({'error': f'Insufficient quantity for {product.Name}'}, status=status.HTTP_400_BAD_REQUEST)
 
-            # Clear the customer's cart after successful purchase
+          
             customer_cart.clear_cart()
 
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 

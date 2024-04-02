@@ -1,9 +1,10 @@
 from django import views
 from django.urls import path
-from .views import  UserRegistrationView,OfficeListView
+
+from .views import UserRegistrationView,OfficeListView
 from .views import ProductListView,ProductDetailView,AddToCart,CartItemsListview,CompanyList,CompanyProductListView,CategoryHomesAPIView,CategoryOfficeApiView
 from .views import AgentProductCreateView,PlaceOrderView,LoginView,book_office,book_home,BookedHomeDetails,BookedOfficeDetails,book_agent_product,OfficeDetailView,HomeDetailView,AgentProductDetailView,BookedAgentProductDetails,RemoveFromWishListView
-from .views import  AddToWishListView,WishListView,RemoveFromCart,DeleteAgentProduct,contact_us,AgentListView,purchase_product,cart_purchase
+from .views import  AddToWishListView,WishListView,RemoveFromCart,DeleteAgentProduct,contact_us,AgentListView,purchase_product
 
 
 urlpatterns = [
@@ -40,22 +41,10 @@ urlpatterns = [
     path('contact-us/', contact_us, name='contact_us'),
     path('agent-list-view/',AgentListView.as_view(),name='agent-list-view'),
     path('product_buy/<int:product_id>/',purchase_product,name='product-buy'),
-    path('cart_buy/<int:product_id>/',cart_purchase,name='product-buy'),
-    
+    # path('cart_buy/<int:product_id>/',cart_purchase,name='product-buy'),
 
-
-   
 
 
     
-    
-    
-
-
-    
-
-
-
-
 ]
 
