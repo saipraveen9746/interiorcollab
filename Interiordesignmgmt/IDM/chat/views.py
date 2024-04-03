@@ -2,7 +2,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework import status
 from django.contrib.auth.decorators import login_required
-from .serializers import MessageSerializer,MessageListSerializer
+from .serializers import MessageSerializer,MessageListSerializer,CustomUserSerializer
 from django.shortcuts import get_object_or_404
 from rest_framework.permissions import IsAuthenticated
 from IDMapp.models import CustomUser
@@ -18,7 +18,6 @@ class MessageListCreateAPIView(generics.ListCreateAPIView):
     
     def get_queryset(self):
         receiver_id = self.kwargs['receiver']
-        # Mark messages as read
         messages = models.Message.objects.filter(receiver_id=receiver_id)
         for message in messages:
             message.is_read = True
@@ -40,3 +39,15 @@ class MessageListAPIView(generics.ListCreateAPIView):
         receiver_id = self.kwargs.get('receiver_id')
         return models.Message.objects.filter(sender=user, receiver_id=receiver_id) | \
                models.Message.objects.filter(sender_id=receiver_id, receiver=user)
+    
+
+
+
+class MessageSenderListView(generics.ListAPIView):
+    serializer_class = CustomUserSerializer
+
+    def get_queryset(self):
+        current_user = self.request.user 
+        return CustomUser.objects.filter(sent_messages__receiver=current_user).distinct()
+
+

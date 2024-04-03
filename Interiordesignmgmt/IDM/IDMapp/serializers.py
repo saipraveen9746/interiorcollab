@@ -228,16 +228,6 @@ class WishLIstViewSerializer(serializers.ModelSerializer):
 
 
 
-
-class ContactUSSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = ContactUS
-        fields = ('id', 'name', 'email', 'contact_no', 'description')
-
-    def create(self, validated_data):
-        return ContactUS.objects.create(**validated_data)
-
-
 class CustomUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomUser
@@ -312,3 +302,7 @@ class Cart_BuySerializer(serializers.ModelSerializer):
         model = Cart_Buy
         fields = '__all__'
 
+class ContactUSSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ContactUS
+        fields = '__all__'

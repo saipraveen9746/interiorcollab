@@ -3,7 +3,7 @@ from django.shortcuts import get_object_or_404, render
 from rest_framework.response import Response
 from rest_framework import status,generics,permissions
 from .serializers import  Cart_BuySerializer, UserRegistrationSerializer,OfficeSerializer
-from .models import Cart_Buy, Order, office,Home,Product,Cart,CartItem,AgentProduct,CustomUser,HomeBookDesign,AgentProductBooking,ListWish,CartBuyItem
+from .models import Cart_Buy, ContactUS, Order, office,Home,Product,Cart,CartItem,AgentProduct,CustomUser,HomeBookDesign,AgentProductBooking,ListWish,CartBuyItem
 from .serializers import ProductListserializer,ProductDetailserializer,CartSerializer,CompanyNameSerializer,AgentProductSerializer,HomeSerializer,AgentbookSerializer,OfficeDetailserializer,HomeDetailserializer,AgentDetailserializer,CartItemSerializer,WishListSerializer,OrderSerializer,OFFiceBookDesign,ContactUSSerializer,CustomUserSerializer,AgentProductDetailsSerializer,ProductBuySerializer
 from .serializers import OFFiceBookDesignSerializer,HomeBookDesignSerializer,WishLIstViewSerializer,CartBuySerializer
 from rest_framework.views import APIView
@@ -556,6 +556,17 @@ def cart_purchase(request, product_id):
 
 
 
+class ContactUSCreateAPIView(generics.CreateAPIView):
+    queryset = ContactUS.objects.all()
+    serializer_class = ContactUSSerializer
+    permission_classes = [IsAuthenticated]
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save(user=request.user)  
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 

@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from .models import Message
+from IDMapp.models import CustomUser
 
 
 
@@ -16,7 +17,11 @@ class MessageListSerializer(serializers.ModelSerializer):
     receiver_username = serializers.ReadOnlyField(source='receiver.username')
     class Meta:
         model = Message
-        fields = ['sender_username','receiver_username','is_read','timestamp','message']
+        fields = ['sender_username','receiver_username','is_read','timestamp','message']  
+
+class CustomUserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CustomUser
+        fields = ['id', 'username']
 
 
-        

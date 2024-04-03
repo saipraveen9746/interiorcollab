@@ -226,6 +226,8 @@ class AgentProductBooking(models.Model):
 
 
 
+
+
 class ContactUS(models.Model):
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE,limit_choices_to={'user_type': 'Customer'},null=True )
     name = models.CharField(max_length=200)

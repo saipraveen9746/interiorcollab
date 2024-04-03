@@ -1,7 +1,7 @@
 from django import views
 from django.urls import path
 
-from .views import UserRegistrationView,OfficeListView
+from .views import ContactUSCreateAPIView, UserRegistrationView,OfficeListView
 from .views import ProductListView,ProductDetailView,AddToCart,CartItemsListview,CompanyList,CompanyProductListView,CategoryHomesAPIView,CategoryOfficeApiView
 from .views import AgentProductCreateView,PlaceOrderView,LoginView,book_office,book_home,BookedHomeDetails,BookedOfficeDetails,book_agent_product,OfficeDetailView,HomeDetailView,AgentProductDetailView,BookedAgentProductDetails,RemoveFromWishListView
 from .views import  AddToWishListView,WishListView,RemoveFromCart,DeleteAgentProduct,contact_us,AgentListView,purchase_product
@@ -42,6 +42,7 @@ urlpatterns = [
     path('agent-list-view/',AgentListView.as_view(),name='agent-list-view'),
     path('product_buy/<int:product_id>/',purchase_product,name='product-buy'),
     # path('cart_buy/<int:product_id>/',cart_purchase,name='product-buy'),
+    path('api/contact-us/', ContactUSCreateAPIView.as_view(), name='contact_us_create')
 
 
 
