@@ -51,3 +51,5 @@ class MessageSenderListView(generics.ListAPIView):
         return CustomUser.objects.filter(sent_messages__receiver=current_user).distinct()
 
 
+
+

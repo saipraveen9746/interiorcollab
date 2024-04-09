@@ -5,6 +5,7 @@ from decimal import Decimal
 from django.contrib.auth.models import AbstractUser
 from .managers import CustomUserManager
 from django.conf import settings
+from django.utils.translation import gettext_lazy as _
 
 
 class CustomUser(AbstractUser):
@@ -106,24 +107,12 @@ class CartItem(models.Model):
     total_price = models.DecimalField(decimal_places=2, max_digits=10, default=0)
 
     def _str_(self):
-        return f"{self.quantity} x {self.product.name} in cart for {self.cart.user.username}"
+        return f"{self.quantity} x {self.product.Name} in cart for {self.cart.user.username}"
 
     def save(self, *args, **kwargs):
         self.total_price = self.product.price * self.quantity
         super(CartItem, self).save(*args, **kwargs)
         self.cart.update_total_price()
-
-
-
-
-
-    
-
-
-
-
-
-
 
 class AgentProduct(models.Model):
     CATEGORY_CHOICES1 = [
@@ -154,45 +143,6 @@ class AgentProduct(models.Model):
     
     def __str__(self):
         return self.name
-
-
-
-class NeededProducts(models.Model):
-    CATREGORY_CHOICES= [
-        ('bookshelves','Bookshelves'),
-        ('centertable','Centertable'),
-        ('lcd display unit','LCD Display Unit'),
-        ('living-dining-partition','Living-Dining Partition'),
-        ('prayer unit','Prayer Unit'),
-        ('shoe rack','Shoe Rack'),
-        ('sofa and single chairs','Sofa and Single Chairs'),
-        ('bed','Bed'),
-        ('dressing unit','Dressing Unit'),
-        ('wardrobe','Wardrobe'),
-        ('bar counter','Bar Counter'),
-        ('crockery shelf','Crockery Shelf'),
-        ('dining chair','Dining Chair'),
-        ('dining table','Dining Table'),
-        ('wash','Wash'),
-        ('study unit','Study Unit'),
-        ('wardrobe cum study table','Wardrobe Cum Study Table'),
-    ]
-    name = models.CharField(max_length=100)
-    photo = models.URLField(max_length=10000)
-    price = models.DecimalField(max_digits=10, decimal_places=2)
-    description = models.TextField()
-    catgory = models.CharField(max_length=100,choices=CATREGORY_CHOICES,null=True)
-
-
-
-
-
-
-class Order(models.Model):
-    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, limit_choices_to={'user_type': 'Customer'},null=True)
-    product = models.ForeignKey(Product, on_delete=models.CASCADE,null=True)
-    quantity = models.PositiveIntegerField(default=0)
-
 
 
 class OFFiceBookDesign(models.Model):
@@ -262,45 +212,10 @@ class ProductBuy(models.Model):
 
 
 
-# class CartBuy(models.Model):
-#     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, limit_choices_to={'user_type': 'Customer'}, null=True)
-#     product = models.ForeignKey(Cart,on_delete=models.CASCADE)
-#     total_price = models.DecimalField(max_digits=10,decimal_places=2)
-#     name = models.CharField(max_length=200)
-#     apartment = models.CharField(max_length=200) 
-#     place = models.CharField(max_length=200)
-#     pincode = models.IntegerField()
-#     phone_number = models.BigIntegerField()
-
-
-#     def save(self, *args, **kwargs):
-#         cart_instance = self.product
-#         total_price = cart_instance.total_price
-#         self.total_price = total_price
-
-#         super().save(*args, **kwargs)
-
-
-# class CartBuyItem(models.Model):
-#     cart_buy = models.ForeignKey(CartBuy, on_delete=models.CASCADE, related_name='items')
-#     product = models.ForeignKey(Cart, on_delete=models.CASCADE)
-#     quantity = models.IntegerField()
-#     price = models.DecimalField(max_digits=10, decimal_places=2)
-
-#     def save(self, *args, **kwargs):
-#         self.price = self.product.price * self.quantity
-#         super().save(*args, **kwargs)
 
 
 
-class Order_Items(models.Model):
-    product_id = models.ForeignKey(Product, on_delete=models.CASCADE)
-    user_id = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
-    quantity = models.IntegerField()
-    order_date = models.DateTimeField(auto_now_add=True)
 
-    def __str__(self):
-        return str(self.user_id)
 
         
 
@@ -308,46 +223,28 @@ class Order_Items(models.Model):
 
 
 
-class CartBuy(models.Model):
-    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, limit_choices_to={'user_type': 'Customer'}, null=True)
-    product = models.ManyToManyField(CartItem)
-    total_price = models.DecimalField(max_digits=10,decimal_places=2)
-    name = models.CharField(max_length=200,null=True)
-    apartment = models.CharField(max_length=200) 
-    place = models.CharField(max_length=200)
-    pincode = models.IntegerField()
-    phone_number = models.BigIntegerField()
-
-
-    def save(self, *args, **kwargs):
-        cart_instance = self.product
-        total_price = cart_instance.total_price
-        self.total_price = total_price
-
-        super().save(*args, **kwargs)
-
-
-
-class CartBuyItem(models.Model):
-    cart_buy = models.ForeignKey(CartBuy, on_delete=models.CASCADE, related_name='items')
-    product = models.ForeignKey(Product, on_delete=models.CASCADE)
-    quantity = models.PositiveIntegerField()
-    price = models.DecimalField(max_digits=10, decimal_places=2)
-    def save(self, *args, **kwargs):
-        self.price = self.product.price * self.quantity
-        super().save(*args, **kwargs)
 
 
 
 
-class Cart_Buy(models.Model):
-    product_name = models.CharField(max_length=255)
-    pincode = models.CharField(max_length=10)
-    name = models.CharField(max_length=200,null=True)
-    apartment = models.CharField(max_length=200) 
-    place = models.CharField(max_length=200)
-    pincode = models.IntegerField()
-    phone_number = models.BigIntegerField()
 
 
 
+class OrderDetail(models.Model):
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
+    name = models.CharField(_('Name'), max_length=255)
+    apartment = models.CharField(_('Apartment'), max_length=255)
+    pincode = models.CharField(_('Pincode'), max_length=10)
+    place = models.CharField(_('Place'), max_length=255)
+    phone_no = models.CharField(_('Phone Number'), max_length=15)
+    product = models.ForeignKey('Product', on_delete=models.CASCADE)
+    quantity = models.PositiveIntegerField(_('Quantity'), default=0)
+    total_price = models.DecimalField(_('Total Price'), decimal_places=2, max_digits=10, default=0)
+    created_at = models.DateTimeField(_('Created At'), auto_now_add=True)
+
+    class Meta:
+        verbose_name = _('Order Detail')
+        verbose_name_plural = _('Order Details')
+
+    def __str__(self):
+        return f"{self.quantity} x {self.product.Name} ordered by {self.user.username}"

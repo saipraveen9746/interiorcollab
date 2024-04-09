@@ -5,7 +5,7 @@ from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 
 
-from .models import Cart_Buy, office,Home,Product,CartItem,Cart,Order,CustomUser,AgentProduct,OFFiceBookDesign,HomeBookDesign,AgentProductBooking,ListWish,ContactUS,ProductBuy,CartBuy,Order_Items,CartBuyItem
+from .models import   office,Home,Product,CartItem,Cart,CustomUser,AgentProduct,OFFiceBookDesign,HomeBookDesign,AgentProductBooking,ListWish,ContactUS,ProductBuy
 from IDMapp import models
 
 class UserRegistrationSerializer(serializers.ModelSerializer):
@@ -113,18 +113,7 @@ class AgentProductSerializer(serializers.ModelSerializer):
     
 
 
-from rest_framework import serializers
-from .models import Order
 
-class OrderSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Order
-        fields = ['product', 'quantity', 'user']
-
-    def create(self, validated_data):
-        user = self.context.get('request').user
-        validated_data['user'] = user
-        return super().create(validated_data)
     
 
 
@@ -251,7 +240,7 @@ class AgentProductDetailsSerializer(serializers.ModelSerializer):
 #     product = ProductSerializer()
 
 #     class Meta:
-#         model = ProductItem
+#         model = Product
 #         fields = ['product', 'quantity']
 
 class ProductBuySerializer(serializers.ModelSerializer):
@@ -279,30 +268,28 @@ class ProductBuySerializer(serializers.ModelSerializer):
         return product_buy
     
 
-class CartBuyItemSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = CartBuyItem
-        fields = ['product', 'quantity', 'price']
-        extra_kwargs = {
-            'product': {'required': False}  # Marking product field as not required
-        }
         
         
-
-class CartBuySerializer(serializers.ModelSerializer):
-    items = CartBuyItemSerializer(many=True, read_only=True)
-    class Meta:
-        model = CartBuy
-        fields = '__all__'
+    
 
 
-
-class Cart_BuySerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Cart_Buy
-        fields = '__all__'
 
 class ContactUSSerializer(serializers.ModelSerializer):
     class Meta:
         model = ContactUS
         fields = '__all__'
+
+
+
+
+# serializers.py
+from rest_framework import serializers
+from .models import OrderDetail
+
+class OrderDetailSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = OrderDetail
+        fields = ['user','name', 'apartment', 'pincode', 'place', 'phone_no', 'product', 'quantity', 'total_price']
+
+
+

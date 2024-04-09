@@ -1,10 +1,12 @@
 from django import views
 from django.urls import path
 
-from .views import ContactUSCreateAPIView, UserRegistrationView,OfficeListView
+
+
+from .views import ContactUSCreateAPIView,UserRegistrationView,OfficeListView
 from .views import ProductListView,ProductDetailView,AddToCart,CartItemsListview,CompanyList,CompanyProductListView,CategoryHomesAPIView,CategoryOfficeApiView
 from .views import AgentProductCreateView,PlaceOrderView,LoginView,book_office,book_home,BookedHomeDetails,BookedOfficeDetails,book_agent_product,OfficeDetailView,HomeDetailView,AgentProductDetailView,BookedAgentProductDetails,RemoveFromWishListView
-from .views import  AddToWishListView,WishListView,RemoveFromCart,DeleteAgentProduct,contact_us,AgentListView,purchase_product
+from .views import  OrderCreateAPIView,AddToWishListView,WishListView,RemoveFromCart,DeleteAgentProduct,contact_us,AgentListView,purchase_product
 
 
 urlpatterns = [
@@ -15,7 +17,6 @@ urlpatterns = [
     path('productlist/',ProductListView.as_view(),name='product_list'),
     path('products/<int:id>/',ProductDetailView.as_view(),name='products'),
     path('cartlist/', CartItemsListview.as_view(), name='cart'),
-    # path('cart/<int:product_id>/', CartView.as_view(), name='add-to-cart')
     path('AddToCart/<int:product_id>/<int:quantity>/',AddToCart.as_view(),name='AddToCart'),
     path('cart/remove/<int:pk>/',RemoveFromCart.as_view(),name='remove-from-cart'),
     path('company-list/', CompanyList.as_view(), name='agent-product-list-create'),
@@ -41,11 +42,17 @@ urlpatterns = [
     path('contact-us/', contact_us, name='contact_us'),
     path('agent-list-view/',AgentListView.as_view(),name='agent-list-view'),
     path('product_buy/<int:product_id>/',purchase_product,name='product-buy'),
-    # path('cart_buy/<int:product_id>/',cart_purchase,name='product-buy'),
-    path('api/contact-us/', ContactUSCreateAPIView.as_view(), name='contact_us_create')
-
-
+    path('api/contact-us/', ContactUSCreateAPIView.as_view(), name='contact_us_create'),
+    path('order/create/', OrderCreateAPIView.as_view(), name='order-create'),
+ 
+ 
 
     
+
+
+
+
+
 ]
+
 
