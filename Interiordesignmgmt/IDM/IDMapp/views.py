@@ -158,36 +158,6 @@ class DeleteAgentProduct(generics.DestroyAPIView):
         return Response({"success": "Agent product deleted successfully"}, status=status.HTTP_204_NO_CONTENT)
 
 
-class PlaceOrderView(APIView):
-    permission_classes = [IsAuthenticated]
-
-    def post(self, request, **kwargs):
-        product_id = kwargs.get('product_id') 
-        quantity = kwargs.get('quantity')
-
-    
-        product = get_object_or_404(Product, pk=product_id)
-
-        if quantity > product.quantity:
-            return Response({'error': 'Not enough quantity available'}, status=status.HTTP_400_BAD_REQUEST)
-
-        order_data = {
-            'product': product_id,
-            'quantity': quantity,
-        }
-
-        serializer = OrderSerializer(data=order_data, context={'request': request})
-        if serializer.is_valid():
-            order = serializer.save()
-            product.quantity -= quantity
-            product.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
-
-
 
 
 class CategoryHomesAPIView(generics.ListAPIView):

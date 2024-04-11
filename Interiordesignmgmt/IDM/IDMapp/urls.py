@@ -5,7 +5,7 @@ from django.urls import path
 
 from .views import ContactUSCreateAPIView,UserRegistrationView,OfficeListView
 from .views import ProductListView,ProductDetailView,AddToCart,CartItemsListview,CompanyList,CompanyProductListView,CategoryHomesAPIView,CategoryOfficeApiView
-from .views import AgentProductCreateView,PlaceOrderView,LoginView,book_office,book_home,BookedHomeDetails,BookedOfficeDetails,book_agent_product,OfficeDetailView,HomeDetailView,AgentProductDetailView,BookedAgentProductDetails,RemoveFromWishListView
+from .views import AgentProductCreateView,LoginView,book_office,book_home,BookedHomeDetails,BookedOfficeDetails,book_agent_product,OfficeDetailView,HomeDetailView,AgentProductDetailView,BookedAgentProductDetails,RemoveFromWishListView
 from .views import  OrderCreateAPIView,AddToWishListView,WishListView,RemoveFromCart,DeleteAgentProduct,contact_us,AgentListView,purchase_product
 
 
@@ -23,7 +23,6 @@ urlpatterns = [
     path('agent-products/<int:user_id>/', CompanyProductListView.as_view(), name='company-product-list'),
     path('agent-product-create/',AgentProductCreateView.as_view(),name='agent-product'),
     path('delete-agent-product/<int:pk>/', DeleteAgentProduct.as_view(), name='delete-agent-product'),
-    path('place_order/<int:product_id>/<int:quantity>/', PlaceOrderView.as_view(), name='place-order'),
     path('homecategory/<str:category>/', CategoryHomesAPIView.as_view(), name='category-homes'),
     path('officecategory/<str:category>/',CategoryOfficeApiView.as_view(),name='category-office'),
     path('login/',LoginView.as_view(),name='login'),
