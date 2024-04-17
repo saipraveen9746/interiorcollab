@@ -3,10 +3,10 @@ from django.urls import path
 
 
 
-from .views import ContactUSCreateAPIView,UserRegistrationView,OfficeListView
+from .views import UserRegistrationView,OfficeListView
 from .views import ProductListView,ProductDetailView,AddToCart,CartItemsListview,CompanyList,CompanyProductListView,CategoryHomesAPIView,CategoryOfficeApiView
 from .views import AgentProductCreateView,LoginView,book_office,book_home,BookedHomeDetails,BookedOfficeDetails,book_agent_product,OfficeDetailView,HomeDetailView,AgentProductDetailView,BookedAgentProductDetails,RemoveFromWishListView
-from .views import  OrderCreateAPIView,AddToWishListView,WishListView,RemoveFromCart,DeleteAgentProduct,contact_us,AgentListView,purchase_product
+from .views import  OrderCreateAPIView,AddToWishListView,WishListView,RemoveFromCart,DeleteAgentProduct,contact_us,AgentListView,purchase_product,UpdateCartItem
 
 
 urlpatterns = [
@@ -41,12 +41,8 @@ urlpatterns = [
     path('contact-us/', contact_us, name='contact_us'),
     path('agent-list-view/',AgentListView.as_view(),name='agent-list-view'),
     path('product_buy/<int:product_id>/',purchase_product,name='product-buy'),
-    path('api/contact-us/', ContactUSCreateAPIView.as_view(), name='contact_us_create'),
+    # path('api/contact-us/', ContactUSCreateAPIView.as_view(), name='contact_us_create'),
     path('order/create/', OrderCreateAPIView.as_view(), name='order-create'),
- 
- 
-
-    
 
 
 

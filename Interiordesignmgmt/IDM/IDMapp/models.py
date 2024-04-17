@@ -106,7 +106,7 @@ class CartItem(models.Model):
     quantity = models.PositiveIntegerField(default=0)
     total_price = models.DecimalField(decimal_places=2, max_digits=10, default=0)
 
-    def _str_(self):
+    def __str__(self):
         return f"{self.quantity} x {self.product.Name} in cart for {self.cart.user.username}"
 
     def save(self, *args, **kwargs):
@@ -114,13 +114,11 @@ class CartItem(models.Model):
         super(CartItem, self).save(*args, **kwargs)
         self.cart.update_total_price()
 
+        
 class AgentProduct(models.Model):
     CATEGORY_CHOICES1 = [
         ('home', 'Home'),
-        ('shop', 'Shop'),
-        ('office', 'Office'),
-        
-     ]
+        ('office', 'Office'), ]
     CATEGORY_CHOICES2=[
         ('kitchen','Kitchen'),
         ('bathroom','Bathroom'),
@@ -129,7 +127,7 @@ class AgentProduct(models.Model):
         ('reception','Reception'),
         ('pantry','Pantry'),
         ('meetingroom','Meetingroom'),
-        ('shoproom','Shoproom')
+
     ]
     user = models.ForeignKey(CustomUser,on_delete=models.CASCADE,limit_choices_to={'user_type':'Agent'},
     related_name='customer_products' ,null=True)

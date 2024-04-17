@@ -5,7 +5,7 @@ from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 
 
-from .models import   office,Home,Product,CartItem,Cart,CustomUser,AgentProduct,OFFiceBookDesign,HomeBookDesign,AgentProductBooking,ListWish,ContactUS,ProductBuy
+from .models import   OrderDetail, office,Home,Product,CartItem,Cart,CustomUser,AgentProduct,OFFiceBookDesign,HomeBookDesign,AgentProductBooking,ListWish,ContactUS,ProductBuy
 from IDMapp import models
 
 class UserRegistrationSerializer(serializers.ModelSerializer):
@@ -279,12 +279,20 @@ class ContactUSSerializer(serializers.ModelSerializer):
         model = ContactUS
         fields = '__all__'
 
+    def validate_contact_no(self,value):
+        if len(str(value))!=10:
+            raise serializers.ValidationError("Number must be 10")
+        return value
+    def validate(self,data):
+        if 'contact_no' not in data and 'description' not in data:
+            raise serializers.ValidationError("Either contact number or description is required.")
+        return data
 
 
 
-# serializers.py
-from rest_framework import serializers
-from .models import OrderDetail
+
+
+
 
 class OrderDetailSerializer(serializers.ModelSerializer):
     class Meta:
@@ -293,3 +301,7 @@ class OrderDetailSerializer(serializers.ModelSerializer):
 
 
 
+class CartIItemSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CartItem
+        fields = ['id', 'product', 'quantity'] 

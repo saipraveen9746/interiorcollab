@@ -5,7 +5,7 @@ from rest_framework import status,generics,permissions
 from .serializers import   OrderDetailSerializer, UserRegistrationSerializer,OfficeSerializer
 from .models import ContactUS,office,Home,Product,Cart,CartItem,AgentProduct,CustomUser,HomeBookDesign,AgentProductBooking,ListWish
 from .serializers import ProductListserializer,ProductDetailserializer,CartSerializer,CompanyNameSerializer,AgentProductSerializer,HomeSerializer,AgentbookSerializer,OfficeDetailserializer,HomeDetailserializer,AgentDetailserializer,CartItemSerializer,WishListSerializer,OFFiceBookDesign,ContactUSSerializer,CustomUserSerializer,AgentProductDetailsSerializer,ProductBuySerializer
-from .serializers import OFFiceBookDesignSerializer,HomeBookDesignSerializer,WishLIstViewSerializer
+from .serializers import OFFiceBookDesignSerializer,HomeBookDesignSerializer,WishLIstViewSerializer,CartIItemSerializer
 from rest_framework.views import APIView
 from .models import ProductBuy
 from rest_framework.permissions import IsAuthenticated
@@ -123,7 +123,7 @@ class CartItemsListview(generics.ListAPIView):
 
 class CompanyList(generics.ListAPIView):
     serializer_class=serializers.CompanyNameSerializer
-    queryset=models.CustomUser.objects.filter(user_type='agent')
+    queryset=models.CustomUser.objects.filter(user_type='Agent')
     permission_classes = [IsAuthenticated]
 
 
@@ -135,6 +135,8 @@ class CompanyProductListView(generics.ListAPIView):
     def get_queryset(self):
         user_id = self.kwargs['user_id']
         return AgentProduct.objects.filter(user_id=user_id)
+    
+
     
 
 class AgentProductCreateView(generics.CreateAPIView):
@@ -403,21 +405,25 @@ class RemoveFromWishListView(generics.DestroyAPIView):
 
 
 
-
 @api_view(['POST'])
+@permission_classes([IsAuthenticated])
 def contact_us(request):
     if request.method == 'POST':
-        serializer = ContactUSSerializer(data=request.data)
+        # Create a mutable copy of request.data
+        mutable_data = request.data.copy()
+        # Add user information to mutable_data
+        mutable_data['user'] = request.user.id
+        serializer = ContactUSSerializer(data=mutable_data)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-
 class AgentListView(generics.ListAPIView):
-    queryset = CustomUser.objects.filter(user_type='agent')
+    queryset = CustomUser.objects.filter(user_type='Agent')
     serializer_class = CustomUserSerializer
+
 
 
 
@@ -443,21 +449,6 @@ def purchase_product(request, product_id):
             serializer.save(user=request.user, product=customer)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
-
-class ContactUSCreateAPIView(generics.CreateAPIView):
-    queryset = ContactUS.objects.all()
-    serializer_class = ContactUSSerializer
-    permission_classes = [IsAuthenticated]
-
-    def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save(user=request.user)  
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
 
 
 
@@ -472,6 +463,8 @@ class OrderCreateAPIView(APIView):
         order_details = []
         for cart_item in cart_items:
             order_details.append({
+
+                
                 'user': user.pk,
                 'name': request.data.get('name'),
                 'apartment': request.data.get('apartment'),
@@ -508,3 +501,34 @@ class OrderCreateAPIView(APIView):
 
 
 
+class UpdateCartItem(generics.UpdateAPIView):
+    permission_classes = [IsAuthenticated]
+    serializer_class = serializers.CartIItemSerializer
+
+    def put(self, request, *args, **kwargs):
+        user = request.user
+        product_id = self.kwargs.get('product_id')
+        new_quantity = request.data.get('quantity')
+
+        if not product_id:
+            return Response({'error': 'Product ID is required'}, status=status.HTTP_400_BAD_REQUEST)
+
+        if new_quantity is None:
+            return Response({'error': 'New quantity is required'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            cart = models.Cart.objects.get(user=user)
+        except models.Cart.DoesNotExist:
+            return Response({'error': 'Cart not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        product = get_object_or_404(models.Product, pk=product_id)
+        
+        try:
+            cart_item = models.CartItem.objects.get(cart=cart, product=product)
+            cart_item.quantity += int(new_quantity)  # Add the new quantity to the existing quantity
+            cart_item.save()
+            cart.update_total_price()  # Update total price after updating cart item
+            serializer = self.get_serializer(cart_item)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except models.CartItem.DoesNotExist:
+            return Response({'error': 'Item not found in cart'}, status=status.HTTP_404_NOT_FOUND)
